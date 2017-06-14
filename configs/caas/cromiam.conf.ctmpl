@@ -1,0 +1,27 @@
+{{with $environment := env "ENVIRONMENT"}}
+
+akka {
+  actor.guardian-supervisor-strategy = akka.actor.StoppingSupervisorStrategy
+}
+
+cromiam {
+  user_id_header = "X-User-Id"
+  allowed_users = [ "anon", "yossi" ]
+
+  http {
+    interface = "0.0.0.0"
+    port = 8000
+  }
+}
+
+sam {
+  interface = "0.0.0.0"
+  port = 8080
+}
+
+cromwell {
+  interface = "caas.cromwell-{{$environment}}.broadinstitute.org"
+  port = 8001
+}
+
+{{end}}
