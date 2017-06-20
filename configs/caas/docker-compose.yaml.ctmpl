@@ -1,0 +1,24 @@
+{{with $image := env "IMAGE"}}{{with $dir := env "DIR"}}{{with $environment := env "ENVIRONMENT"}}
+services:
+  cromiam:
+    image: broadinstitute/cromiam:{{$image}}
+    environment:
+      JAVA_OPTS: -Dconfig.file=/etc/cromiam.conf -DLOG_ROOT=/var/log/cromiam -DLOG_MODE=server
+    volumes:
+      - {{$dir}}/caas/cromiam.conf:/etc/cromiam.conf:ro
+    links:
+      - cromwell:cromwell.dsde-{{$environment}}.broadinstitute.org
+    restart: always
+    expose:
+      - "8000"
+  cromwell:
+    image: broadinstitute/cromwell:27-a6bcebb
+    hostname: cromwell.dsde-{{$environment}}.broadinstitute.org
+    volumes:
+      - {{$dir}}/caas/cromwell.conf:/etc/cromwell.conf:ro
+      - {{$dir}}/caas/cromwell-account.json:/etc/cromwell-account.json:ro
+    restart: always
+    expose:
+      - "8000"
+
+{{end}}{{end}}{{end}}
