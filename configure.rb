@@ -23,6 +23,8 @@ output_dir = ENV.fetch("OUTPUT_DIR") { |_|
   exit 1
 }
 
+$working_dir = ENV.fetch("DIR", output_dir)
+
 # If set, files will be copied from this directory instead of from GitHub. Useful for testing new
 # configuration changes.
 $input_dir = ENV["INPUT_DIR"]
@@ -208,7 +210,7 @@ def render_from_path(path, output_file_name = nil)
   copy_file_from_path(path)
   docker_cmd = [
     "docker", "run", "--rm", "-w", "/w", "-v", "#{Dir.pwd}:/w",
-    "-e", "VAULT_TOKEN=#{$vault_token}", "-e", "ENVIRONMENT=#{$env}", "-e", "INSTANCE=#{$instance}",
+    "-e", "VAULT_TOKEN=#{$vault_token}", "-e", "ENVIRONMENT=#{$env}", "-e", "DIR=#{$working_dir}",
     "broadinstitute/dsde-toolbox:latest",
     "consul-template", "-config=/etc/consul-template/config/config.json",
     "-template=#{file_name}:#{output_file_name}",

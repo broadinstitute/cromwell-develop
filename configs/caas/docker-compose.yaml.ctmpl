@@ -1,24 +1,43 @@
-{{with $image := env "IMAGE"}}{{with $dir := env "DIR"}}{{with $environment := env "ENVIRONMENT"}}
+{{with $environment := env "ENVIRONMENT"}}{{with $dir := env "DIR"}}
 services:
   cromiam:
-    image: broadinstitute/cromiam:{{$image}}
+    image: broadinstitute/cromiam:{{$environment}}
     environment:
       JAVA_OPTS: -Dconfig.file=/etc/cromiam.conf -DLOG_ROOT=/var/log/cromiam -DLOG_MODE=server
     volumes:
-      - {{$dir}}/caas/cromiam.conf:/etc/cromiam.conf:ro
+      - {{$dir}}/cromiam.conf:/etc/cromiam.conf:ro
     links:
       - cromwell:cromwell.dsde-{{$environment}}.broadinstitute.org
     restart: always
     expose:
       - "8000"
+  cromiam-proxy:
+    image: broadinstitute/openidc-proxy:latest
+    hostname: cromiam.caas-{{$environment}}.broadinstitute.org
+    log_driver: "syslog"
+    log_opt:
+      tag: "cromiam-proxy"
+    links:
+      - cromiam:cromiam
+    ports:
+      - "443:443"
+      - "80:80"
+    volumes:
+      - {{$dir}}/server.crt:/etc/ssl/certs/server.crt:ro
+      - {{$dir}}/server.key:/etc/ssl/private/server.key:ro
+      - {{$dir}}/ca-bundle.crt:/etc/ssl/certs/ca-bundle.crt:ro
+    environment:
+      SERVER_NAME: cromiam.caas-{{$environment}}.broadinstitute.org
+      PROXY_URL: http://cromiam:8000/
+    restart: always
   cromwell:
     image: broadinstitute/cromwell:27-a6bcebb
     hostname: cromwell.dsde-{{$environment}}.broadinstitute.org
     volumes:
-      - {{$dir}}/caas/cromwell.conf:/etc/cromwell.conf:ro
-      - {{$dir}}/caas/cromwell-account.json:/etc/cromwell-account.json:ro
+      - {{$dir}}/cromwell.conf:/etc/cromwell.conf:ro
+      - {{$dir}}/cromwell-account.json:/etc/cromwell-account.json:ro
     restart: always
     expose:
       - "8000"
 
-{{end}}{{end}}{{end}}
+{{end}}{{end}}
