@@ -1,0 +1,268 @@
+{{with $environment := env "ENVIRONMENT"}}
+{{with $cromwellSecrets := vault (printf "secret/dsde/caas/%s/cromwell/secrets" $environment)}}
+{{with $commonSecrets := vault (printf "secret/dsde/caas/%s/cromwell/secrets" $environment)}}
+{{with $refreshTokenServiceAccount := vault (printf "secret/dsde/caas/%s/common/refresh-token-service-account.json" $environment)}}
+
+include "application.conf"
+
+webservice {
+  port = 8001
+  interface = 0.0.0.0
+  instance.name = "reference"
+}
+
+akka {
+  actor.default-dispatcher.fork-join-executor {
+    # Number of threads = min(parallelism-factor * cpus, parallelism-max)
+    # Below are the default values set by Akka, uncomment to tune these
+
+    parallelism-factor = 100.0
+    parallelism-max = 64
+  }
+
+  actor.guardian-supervisor-strategy = "cromwell.core.CromwellUserGuardianStrategy"
+
+  dispatchers {
+    # A dispatcher for actors performing blocking io operations
+    # Prevents the whole system from being slowed down when waiting for responses from external resources for instance
+    io-dispatcher {
+      type = Dispatcher
+      executor = "fork-join-executor"
+      # Using the forkjoin defaults, this can be tuned if we wish
+    }
+
+    # A dispatcher for actors handling API operations
+    # Keeps the API responsive regardless of the load of workflows being run
+    api-dispatcher {
+      type = Dispatcher
+      executor = "fork-join-executor"
+    }
+
+    # A dispatcher for engine actors
+    # Because backends behaviour is unpredictable (potentially blocking, slow) the engine runs
+    # on its own dispatcher to prevent backends from affecting its performance.
+    engine-dispatcher {
+      type = Dispatcher
+      executor = "fork-join-executor"
+    }
+
+    # A dispatcher used by supported backend actors
+    backend-dispatcher {
+      type = Dispatcher
+      executor = "fork-join-executor"
+    }
+
+    # A dispatcher used for the service registry
+    service-dispatcher {
+      type = Dispatcher
+      executor = "fork-join-executor"
+    }
+
+    # Note that without further configuration, all other actors run on the default dispatcher
+  }
+}
+
+system {
+  # If 'true', a SIGINT will trigger Cromwell to attempt to abort all currently running jobs before exiting
+  #abort-jobs-on-terminate = false
+
+  # Max number of retries per job that the engine will attempt in case of a retryable failure received from the backend
+  max-retries = 10
+
+  # If 'true' then when Cromwell starts up, it tries to restart incomplete workflows
+  workflow-restart = true
+
+  # Cromwell will cap the number of running workflows at N
+  max-concurrent-workflows = 25000
+
+  # Cromwell will launch up to N submitted workflows at a time, regardless of how many open workflow slots exist
+  max-workflow-launch-count = 50
+
+  # Number of seconds between workflow launches
+  new-workflow-poll-rate = 20
+
+  # Since the WorkflowLogCopyRouter is initialized in code, this is the number of workers
+  number-of-workflow-log-copy-workers = 10
+  
+  io {
+    # Throttle for GCS calls.
+    # this is our quota on broad-dsde-prod
+    number-of-requests = 10240611
+    per = 100 seconds
+	
+    # Number of times an I/O operation should be attempted before giving up and failing it.
+    number-of-attempts = 5
+  }
+}
+
+workflow-options {
+  # These workflow options will be encrypted when stored in the database
+  encrypted-fields: ["refresh_token"]
+
+  # AES-256 key to use to encrypt the values in `encrypted-fields`
+  base64-encryption-key: "{{$commonSecrets.Data.workflow_options_encryption_key}}"
+
+  # Directory where to write per workflow logs
+  workflow-log-dir: "cromwell-workflow-logs"
+
+  # When true, per workflow logs will be deleted after copying
+  workflow-log-temporary: true
+
+  # Workflow-failure-mode determines what happens to other calls when a call fails. Can be either ContinueWhilePossible or NoNewCalls.
+  # Can also be overridden in workflow options. Defaults to NoNewCalls. Uncomment to change:
+  #workflow-failure-mode: "ContinueWhilePossible"
+}
+
+// Optional call-caching configuration.
+call-caching {
+  # Allows re-use of existing results for jobs you've already run
+  # (default: false)
+  enabled = true
+
+  # Whether to invalidate a cache result forever if we cannot reuse them. Disable this if you expect some cache copies
+  # to fail for external reasons which should not invalidate the cache (e.g. auth differences between users):
+  # (default: true)
+  invalidate-bad-cache-results = false
+}
+
+google {
+
+  application-name = "cromwell"
+
+  auths = [
+    #{
+    #  name = "application-default"
+    #  scheme = "application_default"
+    #},
+    {
+      name = "user-via-refresh"
+      scheme = "refresh_token"
+      client-id = "{{$refreshTokenServiceAccount.Data.web.client_id}}"
+      client-secret = "{{$refreshTokenServiceAccount.Data.web.client_secret}}"
+    },
+    {
+      name = "service-account"
+      scheme = "service_account"
+      service-account-id = "{{$commonSecrets.Data.service_auth_service_account_id}}"
+      pem-file = "/etc/cromwell-account.pem"
+    }
+  ]
+}
+
+engine {
+  # This instructs the engine which filesystems are at its disposal to perform any IO operation that it might need.
+  # For instance, WDL variables declared at the Workflow level will be evaluated using the filesystems declared here.
+  # If you intend to be able to run workflows with this kind of declarations:
+  # workflow {
+  #    String str = read_string("gs://bucket/my-file.txt")
+  # }
+  # You will need to provide the engine with a gcs filesystem
+  # Note that the default filesystem (local) is always available.
+  filesystems {
+    gcs {
+      auth = "user-via-refresh"
+    },
+    local {
+    	enabled: false      
+    }
+  }
+}
+
+backend {
+  default = "JES"
+  providers {
+    Local {
+      # setting config.root to /dev/null effectivly disables the local backend preventing end users from running code on the cromwell VM
+      config.root = "/dev/null"
+    }
+
+    JES {
+      actor-factory = "cromwell.backend.impl.jes.JesBackendLifecycleActorFactory"
+      config {
+        // Google project
+        project = "broad-dsde-{{$environment}}"
+
+        // Base bucket for workflow executions
+        root = "gs://cromwell-{{$environment}}/cromwell-executions"
+
+        # Set this to the lower of the two values "Queries per 100 seconds" and "Queries per 100 seconds per user" for
+        # your project.
+        #
+        # Used to help determine maximum throughput to the Google Genomics API. Setting this value too low will
+        # cause a drop in performance. Setting this value too high will cause QPS based locks from Google.
+        # 1000 is the default "Queries per 100 seconds per user", 50000 is the default "Queries per 100 seconds"
+        # See https://cloud.google.com/genomics/quotas for more information
+        genomics-api-queries-per-100-seconds = 1000
+
+        # Polling for completion backs-off gradually for slower-running jobs.
+        # This is the maximum polling interval (in seconds):
+        maximum-polling-interval = 600
+
+        # Optional Dockerhub Credentials. Can be used to access private docker images.
+        dockerhub {
+          account = "dockerhub@broadinstitute.org"
+          token = "{{$commonSecrets.Data.docker_token}}"
+        }
+
+        genomics {
+          # A reference to an auth defined in the `google` stanza at the top.  This auth is used to create
+          # Pipelines and manipulate auth JSONs.
+          auth = "service-account"
+
+          // alternative service account to use on the launched compute instance
+          // NOTE: If combined with service account authorization, both that serivce account and this service account
+          // must be able to read and write to the 'root' GCS path
+          compute-service-account = "default"
+
+          # Endpoint for APIs, no reason to change this unless directed by Google.
+          endpoint-url = "https://genomics.googleapis.com/"
+        }
+
+        filesystems {
+          gcs {
+            # A reference to a potentially different auth for manipulating files via engine functions.
+            auth = "user-via-refresh"
+          }
+        }
+      }
+    }
+  }
+}
+
+services {
+  KeyValue {
+    class = "cromwell.services.keyvalue.impl.SqlKeyValueServiceActor"
+  }
+  MetadataService {
+    class = "cromwell.services.metadata.impl.MetadataServiceActor"
+    config {
+      # Set this value to "Inf" to turn off metadata summary refresh.  The default value is currently "2 seconds".
+      # metadata-summary-refresh-interval = "Inf"
+    }
+  }
+}
+
+database {
+  profile = "slick.jdbc.MySQLProfile$"
+  db {
+    driver = "com.mysql.jdbc.Driver"
+    url = "jdbc:mysql://cromwell-mysql.dsde-{{$environment}}.broadinstitute.org:3306/cromwell?requireSSL=true&useSSL=true&rewriteBatchedStatements=true"
+    user = "{{$cromwellSecrets.Data.db_user}}"
+    password = "{{$cromwellSecrets.Data.db_password}}"
+    connectionTimeout = 60000
+    numThreads = 200
+  }
+
+  migration {
+    # For databases with a very large number of symbols, selecting all the rows at once can generate a variety of
+    # problems. In order to avoid any issue, the selection is paginated. This value sets how many rows should be
+    # retrieved and processed at a time, before asking for the next chunk.
+    read-batch-size = 100000
+
+    # Because a symbol row can contain any arbitrary wdl value, the amount of metadata rows to insert from a single
+    # symbol row can vary from 1 to several thousands (or more). To keep the size of the insert batch from growing out
+    # of control we monitor its size and execute/commit when it reaches or exceeds writeBatchSize.
+    write-batch-size = 100000
+  }
+}
+{{end}}{{end}}{{end}}{{end}}
