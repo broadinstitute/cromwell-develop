@@ -156,8 +156,9 @@ def read_secret_from_path(path, field = nil)
   # Not sure why Vault requires the -1 flag, but it does.
   curl_cmd = ["curl", "-1", "-H", "X-Vault-Token: #{$vault_token}", "#{$vault_url_root}/#{path}"]
   Open3.popen3(*curl_cmd) { |stdin, stdout, stderr, wait_thread|
+    coutput = stdout.read
     if wait_thread.value.success?
-      json = JSON.load(stdout)
+      json = JSON.load(coutput)
       data = json["data"]
       if data.nil?
         STDERR.puts "Could not find secret at path: #{path}"
