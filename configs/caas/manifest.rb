@@ -1,7 +1,9 @@
 render "cromwell.conf.ctmpl"
 render "cromiam.conf.ctmpl"
 render "docker-compose.yaml.ctmpl"
-render "cromwell-account.json.ctmpl"
+#render "cromwell-account.json.ctmpl"
+
+copy_secret_from_path "secret/dsde/caas/#{$env}/cromwell/cromwell-service-account.json", field = "private_key", output_file_name = "cromwell-account.pem"
 
 copy_secret_from_path "secret/common/ca-bundle.crt", "chain"
 copy_secret_from_path "secret/dsde/caas/#{$env}/common/server.key"

@@ -42,7 +42,7 @@ services:
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - {{$dir}}/cromwell.conf:/etc/cromwell.conf:ro
-      - {{$dir}}/cromwell-account.json:/etc/cromwell-account.json:ro
+      - {{$dir}}/cromwell-account.pem:/etc/cromwell-account.pem:ro
       - {{$dir}}/mysql01.jks:/etc/ssl/cromwell.keystore:ro
       - {{$dir}}/mysql_trust.jks:/etc/ssl/cromwell.truststore:ro
     restart: always

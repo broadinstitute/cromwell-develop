@@ -20,7 +20,7 @@ sam {
 }
 
 cromwell {
-  interface = "caas.cromwell-{{$environment}}.broadinstitute.org"
+  interface = "cromwell"
   port = 8001
 }
 
