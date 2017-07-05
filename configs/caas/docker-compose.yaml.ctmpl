@@ -16,9 +16,10 @@ services:
   cromiam-proxy:
     image: broadinstitute/openidc-proxy:latest
     hostname: cromwell.caas-{{$environment}}.broadinstitute.org
-    log_driver: "syslog"
-    log_opt:
-      tag: "cromiam-proxy"
+    logging:
+      driver: syslog
+      options:
+        tag: "cromiam-proxy"
     links:
       - cromiam:cromiam
     ports:
