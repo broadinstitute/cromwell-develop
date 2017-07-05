@@ -1,4 +1,5 @@
 {{with $environment := env "ENVIRONMENT"}}{{with $dir := env "DIR"}}
+version: '2'
 services:
   cromiam:
     image: broadinstitute/cromiam:{{$environment}}
