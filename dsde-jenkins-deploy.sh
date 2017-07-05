@@ -51,6 +51,11 @@ if [ -z "${GIT_REPO}" ]; then
     exit 9
 fi
 
+if [ -z "${APP_REPO}" ]; then
+    echo "FATAL ERROR: APP_REPO undefined."
+    exit 10
+fi
+
 set -eux
 
 ### Configure ###
