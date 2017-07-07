@@ -1,4 +1,5 @@
 {{with $environment := env "ENVIRONMENT"}}
+{{with $clientSecrets := vault (printf "secret/dsde/caas/%s/cromiam/auth-token" $environment)
 
 akka {
   actor.guardian-supervisor-strategy = akka.actor.StoppingSupervisorStrategy
@@ -12,6 +13,11 @@ cromiam {
     interface = "0.0.0.0"
     port = 8000
   }
+
+}
+
+google {
+  client_id = {{$clientSecrets.Data.client_id}}
 }
 
 sam {
@@ -24,4 +30,5 @@ cromwell {
   port = 8001
 }
 
+{{end}}
 {{end}}
