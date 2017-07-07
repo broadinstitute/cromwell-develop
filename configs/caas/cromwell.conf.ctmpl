@@ -1,6 +1,6 @@
 {{with $environment := env "ENVIRONMENT"}}
 {{with $cromwellSecrets := vault (printf "secret/dsde/caas/%s/cromwell/secrets" $environment)}}
-{{with $commonSecrets := vault (printf "secret/dsde/caas/%s/cromwell/secrets" $environment)}}
+{{with $commonSecrets := vault (printf "secret/dsde/caas/%s/common/secrets" $environment)}}
 {{with $refreshTokenServiceAccount := vault (printf "secret/dsde/caas/%s/common/refresh-token-service-account.json" $environment)}}
 
 include "application.conf"
