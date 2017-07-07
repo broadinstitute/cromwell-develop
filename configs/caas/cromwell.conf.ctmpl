@@ -246,7 +246,7 @@ database {
   profile = "slick.jdbc.MySQLProfile$"
   db {
     driver = "com.mysql.jdbc.Driver"
-    url = "jdbc:mysql://cromwell-mysql.dsde-{{$environment}}.broadinstitute.org:3306/cromwell?requireSSL=true&useSSL=true&rewriteBatchedStatements=true"
+    url = "jdbc:mysql://cromwell-mysql.caas-{{$environment}}.broadinstitute.org:3306/cromwell?requireSSL=true&useSSL=true&rewriteBatchedStatements=true"
     user = "{{$cromwellSecrets.Data.db_user}}"
     password = "{{$cromwellSecrets.Data.db_password}}"
     connectionTimeout = 60000
