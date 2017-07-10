@@ -1,5 +1,5 @@
 {{with $environment := env "ENVIRONMENT"}}
-{{with $clientSecrets := vault (printf "secret/dsde/caas/%s/cromiam/auth-token" $environment)
+{{with $cromiamSecrets := vault (printf "secret/dsde/caas/%s/cromiam/secrets" $environment)
 
 akka {
   actor.guardian-supervisor-strategy = akka.actor.StoppingSupervisorStrategy
@@ -17,7 +17,7 @@ cromiam {
 }
 
 google {
-  client_id = {{$clientSecrets.Data.client_id}}
+  client_id = {{$cromiamSecrets.Data.client_id}}
 }
 
 sam {
