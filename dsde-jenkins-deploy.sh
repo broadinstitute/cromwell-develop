@@ -51,11 +51,6 @@ if [ -z "${GIT_REPO}" ]; then
     exit 9
 fi
 
-if [ -z "${APP_REPO}" ]; then
-    echo "FATAL ERROR: APP_REPO undefined."
-    exit 10
-fi
-
 set -eux
 
 ### Configure ###
@@ -71,7 +66,7 @@ $SSHCMD $SSH_USER@$SSH_HOST "bash -c '" \
 #### Deploy ####
 
 # Start new application container with the current version
-$SSHCMD $SSH_USER@$SSH_HOST "docker pull $APP_REPO:$ENV"
+$SSHCMD $SSH_USER@$SSH_HOST "docker-compose -p $PROJECT -f $COMPOSE_FILE  pull"
 $SSHCMD $SSH_USER@$SSH_HOST "docker-compose -p $PROJECT -f $COMPOSE_FILE stop"
 $SSHCMD $SSH_USER@$SSH_HOST "docker-compose -p $PROJECT -f $COMPOSE_FILE rm -f"
 $SSHCMD $SSH_USER@$SSH_HOST "docker-compose -p $PROJECT -f $COMPOSE_FILE up -d"
