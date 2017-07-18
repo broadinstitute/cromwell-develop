@@ -15,7 +15,7 @@ services:
       - "8000"
   cromiam-proxy:
     image: broadinstitute/openidc-proxy:latest
-    hostname: cromwell.caas-{{$environment}}.broadinstitute.org
+    hostname: cromwell.mint-{{$environment}}.broadinstitute.org
     links:
       - cromiam:cromiam
     ports:
@@ -27,7 +27,7 @@ services:
       - {{$dir}}/server.key:/etc/ssl/private/server.key:ro
       - {{$dir}}/ca-bundle.crt:/etc/ssl/certs/ca-bundle.crt:ro
     environment:
-      SERVER_NAME: cromwell.caas-{{$environment}}.broadinstitute.org
+      SERVER_NAME: cromwell.mint-{{$environment}}.broadinstitute.org
       PROXY_URL: http://cromiam:8000/
     restart: always
   cromwell:

@@ -1,7 +1,7 @@
 {{with $environment := env "ENVIRONMENT"}}
-{{with $cromwellSecrets := vault (printf "secret/dsde/caas/%s/cromwell/secrets" $environment)}}
-{{with $commonSecrets := vault (printf "secret/dsde/caas/%s/common/secrets" $environment)}}
-{{with $refreshTokenServiceAccount := vault (printf "secret/dsde/caas/%s/common/refresh-token-service-account.json" $environment)}}
+{{with $cromwellSecrets := vault (printf "secret/dsde/mint/%s/cromwell/secrets" $environment)}}
+{{with $commonSecrets := vault (printf "secret/dsde/mint/%s/common/secrets" $environment)}}
+{{with $refreshTokenServiceAccount := vault (printf "secret/dsde/mint/%s/common/refresh-token-service-account.json" $environment)}}
 
 include "application.conf"
 
@@ -246,7 +246,7 @@ database {
   profile = "slick.jdbc.MySQLProfile$"
   db {
     driver = "com.mysql.jdbc.Driver"
-    url = "jdbc:mysql://cromwell-mysql.caas-{{$environment}}.broadinstitute.org:3306/cromwell?requireSSL=true&useSSL=true&rewriteBatchedStatements=true"
+    url = "jdbc:mysql://cromwell-mysql.mint-{{$environment}}.broadinstitute.org:3306/cromwell?requireSSL=true&useSSL=true&rewriteBatchedStatements=true"
     user = "{{$cromwellSecrets.Data.db_user}}"
     password = "{{$cromwellSecrets.Data.db_password}}"
     connectionTimeout = 60000
