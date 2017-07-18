@@ -1,6 +1,6 @@
 render "cromwell.conf.ctmpl"
 render "docker-compose.yaml.ctmpl"
-#render "cromwell-account.json.ctmpl"
+render "cromwell-account.json.ctmpl"
 
 copy_secret_from_path "secret/dsde/mint/#{$env}/cromwell/cromwell-service-account.json", field = "private_key", output_file_name = "cromwell-account.pem"
 

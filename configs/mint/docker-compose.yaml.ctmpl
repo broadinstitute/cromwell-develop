@@ -1,23 +1,11 @@
 {{with $environment := env "ENVIRONMENT"}}{{with $dir := env "DIR"}}
 version: '2'
 services:
-  cromiam:
-    image: broadinstitute/cromiam:{{$environment}}
-    environment:
-      JAVA_OPTS: -Dconfig.file=/etc/cromiam.conf -DLOG_ROOT=/var/log/cromiam -DLOG_MODE=server
-    volumes:
-      - {{$dir}}/cromiam.conf:/etc/cromiam.conf:ro
-      - /etc/localtime:/etc/localtime:ro
-    links:
-      - cromwell:cromwell
-    restart: always
-    expose:
-      - "8000"
-  cromiam-proxy:
+  cromwell-proxy:
     image: broadinstitute/openidc-proxy:latest
     hostname: cromwell.mint-{{$environment}}.broadinstitute.org
     links:
-      - cromiam:cromiam
+      - cromwell-app:cromwell-app
     ports:
       - "443:443"
       - "80:80"
@@ -28,9 +16,9 @@ services:
       - {{$dir}}/ca-bundle.crt:/etc/ssl/certs/ca-bundle.crt:ro
     environment:
       SERVER_NAME: cromwell.mint-{{$environment}}.broadinstitute.org
-      PROXY_URL: http://cromiam:8000/
+      PROXY_URL: http://app:8000/
     restart: always
-  cromwell:
+  cromwell-app:
     image: broadinstitute/cromwell:27-a6bcebb
     environment:
       JAVA_OPTS: -Dscala.concurrent.context.minThreads=50 -Dscala.concurrent.context.numThreads=50 -Dscala.concurrent.context.maxThreads=50 -Xmx2g -Xms2g -Djavax.net.ssl.keyStore=/etc/ssl/cromwell.keystore -Djavax.net.ssl.keyStorePassword=changeit -Djavax.net.ssl.trustStore=/etc/ssl/cromwell.truststore -Djavax.net.ssl.trustStorePassword=changeit -Dconfig.file=/etc/cromwell.conf
