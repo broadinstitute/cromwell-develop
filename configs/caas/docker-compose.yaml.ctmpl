@@ -30,7 +30,7 @@ services:
       - {{$dir}}/ca-bundle.crt:/etc/ssl/certs/ca-bundle.crt:ro
     environment:
       SERVER_NAME: cromwell.caas-{{$environment}}.broadinstitute.org
-      PROXY_URL: http://app:8000/
+      PROXY_URL: http://app:8080/
     restart: always
   cromwell:
     image: broadinstitute/cromwell:{{$environment}}
