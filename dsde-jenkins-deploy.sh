@@ -63,6 +63,21 @@ $SSHCMD $SSH_USER@$SSH_HOST "bash -c '" \
   " /tmp/configure.rb -y" \
   "'"
 
+#### Create Directories for Sidecar Logging ####
+if [[ -n ${CROMWELL_LOG_DIR} ]]; then
+        $SSHCMD $SSH_USER@$SSH_HOST "if [[ ! -d ${CROMWELL_LOG_DIR} ]]; then sudo mkdir -p ${CROMWELL_LOG_DIR}; fi"
+else
+    echo "FATAL ERROR: env var CROMWELL_LOG_DIR is not defined."
+    exit 10
+fi
+
+if [[ -n ${CROMWELL_LOG_POS_DIR} ]]; then
+        $SSHCMD $SSH_USER@$SSH_HOST "if [[ ! -d ${CROMWELL_LOG_POS_DIR} ]]; then sudo mkdir -p ${CROMWELL_LOG_POS_DIR}; fi"
+else
+    echo "FATAL ERROR: env var CROMWELL_LOG_POS_DIR is not defined."
+    exit 11
+fi
+
 #### Deploy ####
 
 # Start new application container with the current version
