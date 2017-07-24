@@ -95,7 +95,7 @@ else
                 echo "INFO-SHA256SUM_MATCH: install-logging-agent.sh"
                 echo "INFO-EXECUTING_SCRIPT: install-logging-agent.sh"
                 chmod 544 ./install-logging-agent.sh
-                echo "DEBUG: sudo bash -c './install-logging-agent.sh'"
+                sudo bash -c './install-logging-agent.sh'
             else
                 echo "ERROR-SHA256SUM_MISMATCH: install-logging-agent.sh"
             fi
