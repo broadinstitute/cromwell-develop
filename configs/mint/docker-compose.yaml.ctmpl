@@ -14,6 +14,8 @@ services:
       - {{$dir}}/server.crt:/etc/ssl/certs/server.crt:ro
       - {{$dir}}/server.key:/etc/ssl/private/server.key:ro
       - {{$dir}}/ca-bundle.crt:/etc/ssl/certs/ca-bundle.crt:ro
+      - {{$dir}}/site.conf:/etc/apache2/sites-enabled/site.conf
+      - {{$dir}}/htpasswd.users:/etc/apache2/htpasswd.users:ro
     environment:
       SERVER_NAME: cromwell.mint-{{$environment}}.broadinstitute.org
       PROXY_URL: http://app:8000/
