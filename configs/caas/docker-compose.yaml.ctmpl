@@ -13,11 +13,13 @@ services:
     restart: always
     expose:
       - "8000"
+      - "8080"
+      - "5050"
   cromiam-proxy:
     image: broadinstitute/openidc-proxy:latest
     hostname: cromwell.caas-{{$environment}}.broadinstitute.org
     links:
-      - cromiam:cromiam
+      - cromiam:app
     ports:
       - "443:443"
       - "80:80"
@@ -28,7 +30,7 @@ services:
       - {{$dir}}/ca-bundle.crt:/etc/ssl/certs/ca-bundle.crt:ro
     environment:
       SERVER_NAME: cromwell.caas-{{$environment}}.broadinstitute.org
-      PROXY_URL: http://cromiam:8000/
+      PROXY_URL: http://app:8080/
     restart: always
   cromwell:
     image: broadinstitute/cromwell:{{$environment}}
