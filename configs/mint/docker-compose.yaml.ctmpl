@@ -18,8 +18,8 @@ services:
       - {{$dir}}/htpasswd.users:/etc/apache2/htpasswd.users:ro
     environment:
       SERVER_NAME: cromwell.mint-{{$environment}}.broadinstitute.org
-      PROXY_URL: http://app:8001/
-      PROXY_URL2: http://app:8001/api
+      PROXY_URL: http://app:8000/
+      PROXY_URL2: http://app:8000/api
     restart: always
   cromwell-app:
     image: broadinstitute/cromwell:27-a6bcebb

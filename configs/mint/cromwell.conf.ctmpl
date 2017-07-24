@@ -5,11 +5,6 @@
 
 include "application.conf"
 
-webservice {
-  port = 8001
-  interface = 0.0.0.0
-  instance.name = "reference"
-}
 
 akka {
   actor.default-dispatcher.fork-join-executor {
