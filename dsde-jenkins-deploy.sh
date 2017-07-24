@@ -89,19 +89,19 @@ else
     if [[ ! -f install-logging-agent.sh ]]; then
         echo "INFO-GETTING_SCRIPT_USING_CURL: install-logging-agent.sh"
         curl -sSO https://dl.google.com/cloudagents/install-logging-agent.sh
-        if [[ -f install-logging-agent.sh ]]; then
-            _dl_gce_fluentd_sha256sum="\$(sha256sum install-logging-agent.sh | awk '{ print \$1 }')"
-            if [[ \${_dl_gce_fluentd_sha256sum} == ${GCE_FLUENTD_SHA256SUM} ]]; then
-                echo "INFO-SHA256SUM_MATCH: install-logging-agent.sh"
-                echo "INFO-EXECUTING_SCRIPT: install-logging-agent.sh"
-                chmod 544 ./install-logging-agent.sh
-                sudo bash -c './install-logging-agent.sh'
-            else
-                echo "ERROR-SHA256SUM_MISMATCH: install-logging-agent.sh"
-            fi
+    fi
+    if [[ -f install-logging-agent.sh ]]; then
+        _dl_gce_fluentd_sha256sum="\$(sha256sum install-logging-agent.sh | awk '{ print \$1 }')"
+        if [[ \${_dl_gce_fluentd_sha256sum} == ${GCE_FLUENTD_SHA256SUM} ]]; then
+            echo "INFO-SHA256SUM_MATCH: install-logging-agent.sh"
+            echo "INFO-EXECUTING_SCRIPT: install-logging-agent.sh"
+            chmod 544 ./install-logging-agent.sh
+            sudo bash -c './install-logging-agent.sh'
         else
-            echo "ERROR-FILE_NOT_FOUND: install-logging-agent.sh"
+            echo "ERROR-SHA256SUM_MISMATCH: install-logging-agent.sh"
         fi
+    else
+        echo "ERROR-FILE_NOT_FOUND: install-logging-agent.sh"
     fi
 fi
 ENDSSH
