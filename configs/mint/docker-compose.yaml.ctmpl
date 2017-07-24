@@ -19,6 +19,7 @@ services:
     environment:
       SERVER_NAME: cromwell.mint-{{$environment}}.broadinstitute.org
       PROXY_URL: http://app:8001/
+      PROXY_URL2: http://app:8001/api
     restart: always
   cromwell-app:
     image: broadinstitute/cromwell:27-a6bcebb
