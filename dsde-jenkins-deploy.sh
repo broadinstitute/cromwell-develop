@@ -78,6 +78,35 @@ else
     exit 11
 fi
 
+#### Install Fluentd Package ####
+if [[ ${PROJECT} == "mint" ]]; then
+    $SSHCMD $SSH_USER@$SSH_HOST -t -o LogLevel=QUIET /bin/bash <<ENDSSH
+echo "INFO-HOST_INFO: Checking for google-fluentd RPM on host ${SSH_HOST}..."
+if rpm -ql google-fluentd >/dev/null 2>&1; then
+    echo "INFO-PACKAGE_FOUND: Package google-fluentd is already installed."
+else
+    echo "INFO-PACKAGE_NOT_FOUND: google-fluentd"
+    if [[ ! -f install-logging-agent.sh ]]; then
+        echo "INFO-GETTING_SCRIPT_USING_CURL: install-logging-agent.sh"
+        curl -sSO https://dl.google.com/cloudagents/install-logging-agent.sh
+        if [[ -f install-logging-agent.sh ]]; then
+            _dl_gce_fluentd_sha256sum="\$(sha256sum install-logging-agent.sh | awk '{ print \$1 }')"
+            if [[ \${_dl_gce_fluentd_sha256sum} == ${GCE_FLUENTD_SHA256SUM} ]]; then
+                echo "INFO-SHA256SUM_MATCH: install-logging-agent.sh"
+                echo "INFO-EXECUTING_SCRIPT: install-logging-agent.sh"
+                chmod 544 ./install-logging-agent.sh
+                echo "DEBUG: sudo bash -c './install-logging-agent.sh'"
+            else
+                echo "ERROR-SHA256SUM_MISMATCH: install-logging-agent.sh"
+            fi
+        else
+            echo "ERROR-FILE_NOT_FOUND: install-logging-agent.sh"
+        fi
+    fi
+fi
+ENDSSH
+fi
+
 #### Deploy ####
 
 # Start new application container with the current version
