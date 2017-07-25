@@ -1,0 +1,100 @@
+#!/bin/bash
+# v1.0 zarsky@broad
+{{with $environment := env "ENVIRONMENT"}}{{with $proxyLdap := vault (printf "secret/dsde/firecloud/%s/common/proxy-ldap" $environment)}}
+hash fswatch 2>/dev/null || {
+    echo >&2 "This script requires fswatch (https://github.com/emcrisostomo/fswatch), but it's not installed. On Darwin, just \"brew install fswatch\".  Aborting."; exit 1;
+}
+
+if [ -a ./.docker-rsync-local.pid ]; then
+    echo "Looks like clean-up wasn't completed, doing it now..."
+    docker rm -f cromiam-rsync-container cromiam-proxy cromiam-sbt cromwell
+    docker network rm caas
+    pkill -P $(< "./.docker-rsync-local.pid")
+    rm ./.docker-rsync-local.pid
+fi
+
+clean_up () {
+    echo
+    echo "Cleaning up after myself..."
+    docker rm -f cromiam-rsync-container cromiam-proxy cromiam-sbt cromwell-container
+    docker network rm caas
+    pkill -P $$
+    rm ./.docker-rsync-local.pid
+}
+trap clean_up EXIT HUP INT QUIT PIPE TERM 0 20
+
+echo "Creating shared volumes if they don't exist..."
+docker volume create --name cromiam-shared-source
+docker volume create --name jar-cache
+
+echo "Launching rsync container..."
+docker run -d \
+    --name cromiam-rsync-container \
+    -v cromiam-shared-source:/working \
+    -e DAEMON=docker \
+    tjamet/rsync
+
+run_rsync ()  {
+    rsync --blocking-io -azl --delete -e "docker exec -i" . sam-rsync-container:working \
+        --filter='+ /build.sbt' \
+        --filter='+ /config/***' \
+        --filter='+ /src/***' \
+        --filter='- /project/project/target/***' \
+        --filter='- /project/target/***' \
+        --filter='+ /project/***' \
+        --filter='+ /.git/***' \
+        --filter='- *'
+}
+echo "Performing initial file sync..."
+run_rsync
+fswatch -o . | while read f; do run_rsync; done &
+echo $$ > ./.docker-rsync-local.pid
+
+start_server () {
+    docker network create caas
+
+    echo "Creating SBT docker container..."
+    docker create -it --name cromiam-sbt \
+    -v cromiam-shared-source:/app -w /app \
+    -v jar-cache:/root/.ivy -v jar-cache:/root/.ivy2 \
+    -p 45050:5050 \
+    --network=caas \
+    -e JAVA_OPTS='-Dconfig.file=/app/config/cromiam.conf' \
+    --links cromwell:cromwell \
+    hseeberger/scala-sbt \
+    sbt \~reStart
+
+
+    echo "Creating proxy..."
+    docker create --name cromiam-proxy \
+    --restart "always" \
+    --network=caas \
+    -p 40080:80 -p 50443:443 \
+    -e PROXY_URL='http://cromiam-sbt:8080/' \
+    -e PROXY_URL2='http://cromiam-sbt:8080/api' \
+    -e PROXY_URL3='http://cromiam-sbt:8080/register' \
+    -e CALLBACK_URI='https://local.broadinstitute.org/oauth2callback' \
+    -e LOG_LEVEL='debug' \
+    -e SERVER_NAME='local.broadinstitute.org' \
+    -e AUTH_REQUIRE2='Require ldap-group cn=broad-dsde-dev,ou=groups,dc=dsde-dev,dc=broadinstitute,dc=org' \
+    -e AUTH_LDAP_URL2='AuthLDAPURL "ldap://ldap.dsde-dev.broadinstitute.org/ou=people,dc=dsde-dev,dc=broadinstitute,dc=org?cn?sub?(objectClass=*)"' \
+    -e AUTH_LDAP_GROUP_ATTR2='AuthLDAPGroupAttribute member' \
+    -e AUTH_LDAP_BIND_DN2='AuthLDAPBindDN "cn=proxy-ro,dc=dsde-dev,dc=broadinstitute,dc=org"' \
+    -e AUTH_LDAP_BIND_PASSWORD2='AuthLDAPBindPassword {{$proxyLdap.Data.proxy_ldap_bind_password}}' \
+    -e REMOTE_USER_CLAIM='sub' \
+    -e ENABLE_STACKDRIVER='yes' \
+    -e FILTER2='AddOutputFilterByType DEFLATE application/json text/plain text/html application/javascript application/x-javascript' \
+    broadinstitute/openidc-proxy:latest
+
+    docker cp config/server.crt cromiam-proxy:/etc/ssl/certs/server.crt
+    docker cp config/server.key cromiam-proxy:/etc/ssl/private/server.key
+    docker cp config/ca-bundle.crt cromiam-proxy:/etc/ssl/certs/ca-bundle.crt
+
+
+    echo "Starting proxy..."
+    docker start cromiam-proxy
+    echo "Starting SBT..."
+    docker start -ai cromiam-sbt
+}
+start_server
+{{end}}{{end}}

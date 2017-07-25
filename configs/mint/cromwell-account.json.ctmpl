@@ -1,6 +1,0 @@
-{{with $environment := env "ENVIRONMENT"}}
-{{with $CromwellServiceAcct := vault (printf "secret/dsde/mint/%s/cromwell/cromwell-service-account.json" $environment)}}
-
-{{$CromwellServiceAcct.Data | toJSONPretty}}
-
-{{end}}{{end}}

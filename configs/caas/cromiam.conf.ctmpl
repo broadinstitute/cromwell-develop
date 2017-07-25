@@ -1,5 +1,4 @@
-{{with $environment := env "ENVIRONMENT"}}
-{{with $cromiamSecrets := vault (printf "secret/dsde/caas/%s/cromiam/secrets" $environment)}}
+{{with $cromiamSecrets := vault (printf "secret/dsde/caas/dev/cromiam/secrets")}}
 
 akka {
   actor.guardian-supervisor-strategy = akka.actor.StoppingSupervisorStrategy
@@ -21,14 +20,13 @@ google {
 }
 
 sam {
-  interface = "0.0.0.0"
-  port = 8080
+  interface = "https://sam.dsde-dev.broadinstitute.org"
+  port = 443
 }
 
 cromwell {
-  interface = "cromwell"
-  port = 8001
+  interface = "https://cromwell.dsde-dev.broadinstitute.org"
+  port = 443
 }
 
-{{end}}
 {{end}}
