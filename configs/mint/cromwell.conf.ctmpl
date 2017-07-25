@@ -110,7 +110,7 @@ google {
     {
       name = "service-account"
       scheme = "service_account"
-      service-account-id = "{{$commonSecrets.Data.service_auth_service_account_id}}"
+      service-account-id = "{{$commonSecrets.Data.service_account}}"
       pem-file = "/etc/cromwell-account.pem"
     }
   ]
