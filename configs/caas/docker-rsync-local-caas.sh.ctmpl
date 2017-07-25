@@ -7,7 +7,7 @@ hash fswatch 2>/dev/null || {
 
 if [ -a ./.docker-rsync-local.pid ]; then
     echo "Looks like clean-up wasn't completed, doing it now..."
-    docker rm -f cromiam-rsync-container cromiam-proxy cromiam-sbt cromwell
+    docker rm -f cromiam-rsync-container cromiam-proxy cromiam-sbt
     docker network rm caas
     pkill -P $(< "./.docker-rsync-local.pid")
     rm ./.docker-rsync-local.pid
@@ -16,7 +16,7 @@ fi
 clean_up () {
     echo
     echo "Cleaning up after myself..."
-    docker rm -f cromiam-rsync-container cromiam-proxy cromiam-sbt cromwell-container
+    docker rm -f cromiam-rsync-container cromiam-proxy cromiam-sbt
     docker network rm caas
     pkill -P $$
     rm ./.docker-rsync-local.pid
@@ -35,7 +35,7 @@ docker run -d \
     tjamet/rsync
 
 run_rsync ()  {
-    rsync --blocking-io -azl --delete -e "docker exec -i" . sam-rsync-container:working \
+    rsync --blocking-io -azl --delete -e "docker exec -i" . cromiam-rsync-container:working \
         --filter='+ /build.sbt' \
         --filter='+ /config/***' \
         --filter='+ /src/***' \
@@ -60,7 +60,6 @@ start_server () {
     -p 45050:5050 \
     --network=caas \
     -e JAVA_OPTS='-Dconfig.file=/app/config/cromiam.conf' \
-    --links cromwell:cromwell \
     hseeberger/scala-sbt \
     sbt \~reStart
 

@@ -48,7 +48,6 @@ config () {
         then
         cd ..
     fi
-
     cd $2
     APP_NAME=$1 \
     ENV=local \
@@ -58,7 +57,11 @@ config () {
     cd ..
 }
 
-read -rp "Path to cromiam repo, if not cromiam: " cromiam_dir
+read -rp "Name of cromiam repo, if not cromiam: " cromiam_dir
+if [ ! $cromiam_dir ]
+    then
+    cromiam_dir=cromiam
+fi
 confirm "Set up CaaS? " config "caas" $cromiam_dir
 
 echo "If you plan to run firecloud locally, run this command:"
