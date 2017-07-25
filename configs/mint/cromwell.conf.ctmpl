@@ -90,24 +90,6 @@ system {
   }
 }
 
-workflow-options {
-  # These workflow options will be encrypted when stored in the database
-  encrypted-fields: ["refresh_token"]
-
-  # AES-256 key to use to encrypt the values in `encrypted-fields`
-  base64-encryption-key: "{{$commonSecrets.Data.workflow_options_encryption_key}}"
-
-  # Directory where to write per workflow logs
-  workflow-log-dir: "cromwell-workflow-logs"
-
-  # When true, per workflow logs will be deleted after copying
-  workflow-log-temporary: true
-
-  # Workflow-failure-mode determines what happens to other calls when a call fails. Can be either ContinueWhilePossible or NoNewCalls.
-  # Can also be overridden in workflow options. Defaults to NoNewCalls. Uncomment to change:
-  #workflow-failure-mode: "ContinueWhilePossible"
-}
-
 // Optional call-caching configuration.
 call-caching {
   # Allows re-use of existing results for jobs you've already run
@@ -125,16 +107,6 @@ google {
   application-name = "cromwell"
 
   auths = [
-    #{
-    #  name = "application-default"
-    #  scheme = "application_default"
-    #},
-    {
-      name = "user-via-refresh"
-      scheme = "refresh_token"
-      client-id = "{{$refreshTokenServiceAccount.Data.web.client_id}}"
-      client-secret = "{{$refreshTokenServiceAccount.Data.web.client_secret}}"
-    },
     {
       name = "service-account"
       scheme = "service_account"
@@ -155,7 +127,7 @@ engine {
   # Note that the default filesystem (local) is always available.
   filesystems {
     gcs {
-      auth = "user-via-refresh"
+      auth = "service-account"
     },
     local {
     	enabled: false      
@@ -175,10 +147,10 @@ backend {
       actor-factory = "cromwell.backend.impl.jes.JesBackendLifecycleActorFactory"
       config {
         // Google project
-        project = "broad-dsde-{{$environment}}"
+        project = "broad-dsde-mint-{{$environment}}"
 
         // Base bucket for workflow executions
-        root = "gs://cromwell-{{$environment}}/cromwell-executions"
+        root = "gs://broad-dsde-mint-{{$environment}}-cromwell-execution/cromwell-executions"
 
         # Set this to the lower of the two values "Queries per 100 seconds" and "Queries per 100 seconds per user" for
         # your project.
@@ -207,7 +179,7 @@ backend {
           // alternative service account to use on the launched compute instance
           // NOTE: If combined with service account authorization, both that serivce account and this service account
           // must be able to read and write to the 'root' GCS path
-          compute-service-account = "default"
+          //compute-service-account = "default"
 
           # Endpoint for APIs, no reason to change this unless directed by Google.
           endpoint-url = "https://genomics.googleapis.com/"
@@ -216,7 +188,7 @@ backend {
         filesystems {
           gcs {
             # A reference to a potentially different auth for manipulating files via engine functions.
-            auth = "user-via-refresh"
+            auth = "service-account"
           }
         }
       }
