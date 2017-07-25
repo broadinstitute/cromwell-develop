@@ -1,5 +1,5 @@
 #!/bin/bash
-# v1.0 zarsky@broad
+# v1.0 jroberti@broad
 {{with $environment := env "ENVIRONMENT"}}{{with $proxyLdap := vault (printf "secret/dsde/firecloud/%s/common/proxy-ldap" $environment)}}
 hash fswatch 2>/dev/null || {
     echo >&2 "This script requires fswatch (https://github.com/emcrisostomo/fswatch), but it's not installed. On Darwin, just \"brew install fswatch\".  Aborting."; exit 1;
@@ -39,8 +39,6 @@ run_rsync ()  {
         --filter='+ /build.sbt' \
         --filter='+ /config/***' \
         --filter='+ /src/***' \
-        --filter='- /project/project/target/***' \
-        --filter='- /project/target/***' \
         --filter='+ /project/***' \
         --filter='+ /.git/***' \
         --filter='- *'
@@ -69,9 +67,8 @@ start_server () {
     --restart "always" \
     --network=caas \
     -p 40080:80 -p 50443:443 \
-    -e PROXY_URL='http://cromiam-sbt:8080/' \
-    -e PROXY_URL2='http://cromiam-sbt:8080/api' \
-    -e PROXY_URL3='http://cromiam-sbt:8080/register' \
+    -e PROXY_URL='http://cromiam-sbt:8001/' \
+    -e PROXY_URL2='http://cromiam-sbt:8001/api' \
     -e CALLBACK_URI='https://local.broadinstitute.org/oauth2callback' \
     -e LOG_LEVEL='debug' \
     -e SERVER_NAME='local.broadinstitute.org' \
