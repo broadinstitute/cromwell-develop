@@ -59,7 +59,7 @@ start_server () {
     --network=caas \
     -e JAVA_OPTS='-Dconfig.file=/app/config/cromiam.conf' \
     hseeberger/scala-sbt \
-    sbt \~reStart
+    sbt 'set javaOptions in reStart += "-Dconfig.file=/app/config/cromiam.conf"' \~reStart
 
 
     echo "Creating proxy..."
