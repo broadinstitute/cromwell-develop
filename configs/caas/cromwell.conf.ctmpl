@@ -1,12 +1,12 @@
 {{with $environment := env "ENVIRONMENT"}}
 {{with $cromwellSecrets := vault (printf "secret/dsde/caas/%s/cromwell/secrets" $environment)}}
-{{with $commonSecrets := vault (printf "secret/dsde/caas/%s/common/secrets" $environment)}}
-{{with $refreshTokenServiceAccount := vault (printf "secret/dsde/caas/%s/common/refresh-token-service-account.json" $environment)}}
+{{with $commonSecrets := vault (printf "secret/dsde/caas/dev/common/secrets")}}
+{{with $refreshTokenServiceAccount := vault (printf "secret/dsde/caas/dev/common/refresh-token-service-account.json")}}
 
 include "application.conf"
 
 webservice {
-  port = 8001
+  port = 8000
   interface = 0.0.0.0
   instance.name = "reference"
 }
@@ -180,10 +180,10 @@ backend {
       actor-factory = "cromwell.backend.impl.jes.JesBackendLifecycleActorFactory"
       config {
         // Google project
-        project = "broad-dsde-{{$environment}}"
+        project = "broad-dsde-dev"
 
         // Base bucket for workflow executions
-        root = "gs://cromwell-{{$environment}}/cromwell-executions"
+        root = "gs://cromwell-local-dev/cromwell-executions"
 
         # Set this to the lower of the two values "Queries per 100 seconds" and "Queries per 100 seconds per user" for
         # your project.
@@ -246,7 +246,7 @@ database {
   profile = "slick.jdbc.MySQLProfile$"
   db {
     driver = "com.mysql.jdbc.Driver"
-    url = "jdbc:mysql://cromwell-mysql.caas-{{$environment}}.broadinstitute.org:3306/cromwell?requireSSL=true&useSSL=true&rewriteBatchedStatements=true"
+    url = "jdbc:mysql://cromwell-mysql.caas-{{$environment}}.broadinstitute.org:3306/cromwell?requireSSL=false&useSSL=true&rewriteBatchedStatements=true"
     user = "{{$cromwellSecrets.Data.db_user}}"
     password = "{{$cromwellSecrets.Data.db_password}}"
     connectionTimeout = 60000
