@@ -18,7 +18,7 @@ cromwell {
 }
 
 swagger_oauth {
-  client_id = "{{$cromiamSecrets.Data.old_client_id}}"
+  client_id = "{{$cromiamSecrets.Data.client_id}}"
   realm = "{{$cromiamSecrets.Data.realm}}"
   app_name = "{{$cromiamSecrets.Data.app_name}}"
 }
