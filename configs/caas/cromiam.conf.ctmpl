@@ -6,13 +6,15 @@ cromiam {
 }
 
 sam {
-  interface = "https://sam.dsde-dev.broadinstitute.org"
+  interface = "sam.dsde-dev.broadinstitute.org"
   port = 443
+  scheme = "https"
 }
 
 cromwell {
   interface = "cromwell-app"
   port = 8000
+  scheme = "http"
 }
 
 swagger_oauth {
