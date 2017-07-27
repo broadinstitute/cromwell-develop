@@ -17,6 +17,8 @@ clean_up () {
     echo
     echo "Cleaning up after myself..."
     docker rm -f cromiam-rsync-container cromiam-proxy cromiam-sbt
+    docker-compose -f config/docker-compose.yaml stop
+    docker-compose -f config/docker-compose.yaml rm -f
     docker network rm caas
     pkill -P $$
     rm ./.docker-rsync-local.pid
@@ -50,6 +52,9 @@ echo $$ > ./.docker-rsync-local.pid
 
 start_server () {
     docker network create caas
+
+    echo "Starting up cromwell..."
+    docker-compose -f config/docker-compose.yaml up -d
 
     echo "Creating SBT docker container..."
     docker create -it --name cromiam-sbt \

@@ -11,12 +11,12 @@ sam {
 }
 
 cromwell {
-  interface = "https://cromwell.dsde-dev.broadinstitute.org"
-  port = 443
+  interface = "cromwell-app"
+  port = 8000
 }
 
 swagger_oauth {
-  client_id = "{{$cromiamSecrets.Data.client_id}}"
+  client_id = "{{$cromiamSecrets.Data.old_client_id}}"
   realm = "{{$cromiamSecrets.Data.realm}}"
   app_name = "{{$cromiamSecrets.Data.app_name}}"
 }

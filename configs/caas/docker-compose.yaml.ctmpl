@@ -1,0 +1,42 @@
+{{with $environment := env "ENVIRONMENT"}}
+{{with $dir := env "DIR"}}
+{{with $instanceSecrets := vault (printf "secret/dsde/caas/%s/cromwell/secrets" $environment)}}
+
+version: '2'
+services:
+  cromwell-mysql:
+    image: mysql:5.7.15
+    expose:
+      - "3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD={{$instanceSecrets.Data.db_password}}
+      - MYSQL_USER={{$instanceSecrets.Data.db_user}}
+      - MYSQL_PASSWORD={{$instanceSecrets.Data.db_password}}
+      - MYSQL_DATABASE=cromwell
+    #volumes:
+    #  - {{$dir}}/mysqlstore/cromwell:/var/lib/mysql
+    networks:
+      - outside
+  cromwell-app:
+    image: broadinstitute/cromwell:28-5fd2237
+    links:
+      - cromwell-mysql:cromwell-mysql.caas-{{$environment}}.broadinstitute.org
+    expose:
+      - "8000"
+    depends_on:
+      - cromwell-mysql
+    environment:
+      JAVA_OPTS: -Dscala.concurrent.context.minThreads=10 -Dscala.concurrent.context.numThreads=10 -Dscala.concurrent.context.maxThreads=10 -Xmx2g -Xms2g -Dconfig.file=/etc/cromwell.conf
+      CROMWELL_ARGS: server
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - {{$dir}}/cromwell.conf:/etc/cromwell.conf:ro
+      - {{$dir}}/cromwell-account.pem:/etc/cromwell-account.pem:ro
+    restart: always
+    networks:
+      - outside
+networks:
+  outside:
+    external:
+      name: caas
+{{end}}{{end}}{{end}}

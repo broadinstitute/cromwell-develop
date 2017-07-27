@@ -53,6 +53,7 @@ config () {
     ENV=local \
     INPUT_DIR=../cromwell-develop \
     OUTPUT_DIR=config \
+    DIR=$PWD/config \
     ../cromwell-develop/configure.rb
     cd ..
 }
