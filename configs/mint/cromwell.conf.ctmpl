@@ -170,6 +170,15 @@ backend {
           account = "dockerhub@broadinstitute.org"
           token = "{{$commonSecrets.Data.docker_token}}"
         }
+	
+	submit-docker = """
+        docker run \
+          --rm -i \
+          ${"--user " + docker_user} \
+          --entrypoint /bin/bash \
+          -v ${cwd}:${docker_cwd} \
+          ${docker} ${script}
+        """
 
         genomics {
           # A reference to an auth defined in the `google` stanza at the top.  This auth is used to create
