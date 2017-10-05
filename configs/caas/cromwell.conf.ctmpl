@@ -160,7 +160,7 @@ engine {
   # Note that the default filesystem (local) is always available.
   filesystems {
     gcs {
-      auth = "user-via-refresh"
+      auth = "service-account"
     },
     local {
     	enabled: false      
@@ -180,10 +180,10 @@ backend {
       actor-factory = "cromwell.backend.impl.jes.JesBackendLifecycleActorFactory"
       config {
         // Google project
-        project = "broad-dsde-{{$environment}}"
+        project = "broad-dsde-caas-{{$environment}}"
 
         // Base bucket for workflow executions
-        root = "gs://cromwell-{{$environment}}/cromwell-executions"
+        root = "gs://broad-dsde-caas-{{$environment}}/cromwell-executions"
 
         # Set this to the lower of the two values "Queries per 100 seconds" and "Queries per 100 seconds per user" for
         # your project.
@@ -221,7 +221,7 @@ backend {
         filesystems {
           gcs {
             # A reference to a potentially different auth for manipulating files via engine functions.
-            auth = "user-via-refresh"
+            auth = "service-account"
           }
         }
       }
