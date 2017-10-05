@@ -4,7 +4,7 @@ services:
   cromiam:
     image: broadinstitute/cromiam:{{$environment}}
     environment:
-      JAVA_OPTS: -Dconfig.file=/etc/cromiam.conf -DLOG_ROOT=/var/log/cromiam -DLOG_MODE=server
+      JAVA_OPTS: -Dconfig.file=/etc/cromiam.conf -DLOG_ROOT=/var/log/cromiam -DLOG_MODE=server -Djsse.enableSNIExtension=false
     volumes:
       - {{$dir}}/cromiam.conf:/etc/cromiam.conf:ro
       - /etc/localtime:/etc/localtime:ro
