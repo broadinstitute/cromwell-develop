@@ -1,8 +1,6 @@
 {{with $environment := env "ENVIRONMENT"}}
 {{with $cromwellSecrets := vault (printf "secret/dsde/mint/%s/cromwell/secrets" $environment)}}
 {{with $commonSecrets := vault (printf "secret/dsde/mint/%s/common/secrets" $environment)}}
-{{with $refreshTokenServiceAccount := vault (printf "secret/dsde/mint/%s/common/refresh-token-service-account.json" $environment)}}
-
 include "application.conf"
 
 
@@ -110,8 +108,7 @@ google {
     {
       name = "service-account"
       scheme = "service_account"
-      service-account-id = "{{$commonSecrets.Data.service_account}}"
-      pem-file = "/etc/cromwell-account.pem"
+      json-file = "/etc/cromwell-account.json"
     }
   ]
 }
@@ -241,4 +238,4 @@ database {
     write-batch-size = 100000
   }
 }
-{{end}}{{end}}{{end}}{{end}}
+{{end}}{{end}}{{end}}

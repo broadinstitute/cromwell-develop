@@ -24,7 +24,7 @@ services:
       PROXY_URL2: http://app:8000/api
     restart: always
   cromwell-app:
-    image: broadinstitute/cromwell:27-a6bcebb
+    image: broadinstitute/cromwell:29-3be5b8c
     logging:
       driver: "syslog"
     environment:
@@ -33,7 +33,7 @@ services:
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - {{$dir}}/cromwell.conf:/etc/cromwell.conf:ro
-      - {{$dir}}/cromwell-account.pem:/etc/cromwell-account.pem:ro
+      - {{$dir}}/cromwell-account.json:/etc/cromwell-account.json:ro
       - {{$dir}}/mysql01.jks:/etc/ssl/cromwell.keystore:ro
       - {{$dir}}/mysql_trust.jks:/etc/ssl/cromwell.truststore:ro
     restart: always
