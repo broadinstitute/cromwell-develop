@@ -3,8 +3,6 @@ render "docker-compose.yaml.ctmpl"
 render "cromwell-account.json.ctmpl"
 render "htpasswd.users.ctmpl"
 
-copy_secret_from_path "secret/dsde/mint/#{$env}/cromwell/cromwell-service-account.json", field = "private_key", output_file_name = "cromwell-account.pem"
-
 copy_secret_from_path "secret/common/ca-bundle.crt", "chain"
 copy_secret_from_path "secret/dsde/mint/#{$env}/common/server.key"
 copy_secret_from_path "secret/dsde/mint/#{$env}/common/server.crt"
