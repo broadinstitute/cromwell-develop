@@ -1,0 +1,62 @@
+app:
+  image: broadinstitute/cromwell:29-2caec7d
+  log_driver: "syslog"
+  log_opt:
+    tag: "cromwell-app"
+  env_file:
+    - /app/cromwell/cromwell.env
+  volumes:
+    - /etc/localtime:/etc/localtime:ro
+    - /app/cromwell/cromwell.conf:/etc/cromwell.conf:ro
+    - /app/cromwell/cromwell-account.json:/etc/cromwell-account.json:ro
+  links:
+    - logger
+    - sqlproxy
+  volumes_from:
+    - logger
+  restart: always
+
+proxy:
+  image: broadinstitute/openidc-proxy:latest
+  hostname: cromwell-verily.dsp-techops.broadinstitute.org
+  log_driver: "syslog"
+  log_opt:
+    tag: "cromwell-proxy"
+  env_file:
+    - /app/proxy/proxy.env
+  links:
+    - app:app
+    - logger
+  ports:
+    - "80:80"
+    - "443:443"
+  volumes:
+    - /etc/localtime:/etc/localtime:ro
+    - /app/proxy/server.crt:/etc/ssl/certs/server.crt:ro
+    - /app/proxy/server.key:/etc/ssl/private/server.key:ro
+    - /app/proxy/ca-bundle.crt:/etc/ssl/certs/ca-bundle.crt:ro
+    - /app/proxy/site.conf:/etc/apache2/sites-enabled/site.conf
+    - /app/proxy/mpm_event.conf:/etc/apache2/conf-enabled/mpm_event.conf:ro
+  volumes_from:
+    - logger
+  restart: always
+
+logger:
+  image: broadinstitute/fluentd-gcp:latest
+  volumes:
+    - /app/logger/config.d:/etc/fluent/config.d:ro
+    - /local/cromwell_logs:/logs
+  restart: always
+
+sqlproxy:
+  image: gcr.io/cloudsql-docker/gce-proxy:1.10
+  env_file:
+    - /app/sqlprox/sqlproxy.env
+  links:
+    - logger
+  volumes_from:
+    - logger
+  command:  ["/bin/sh", "-c", "/cloud_sql_proxy -instances=${GOOGLE_PROJECT}:${CLOUDSQL_ZONE}:${CLOUDSQL_INSTANCE}=tcp:0.0.0.0:3306 -credential_file=${CLOUDSQL_SVCACCT_PATH}"]
+  volumes:
+     - /app/sqlproxy/cromwell-cloudsql-account.json:
+  restart: always

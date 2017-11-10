@@ -1,0 +1,6 @@
+{{with $environment := env "ENVIRONMENT"}}
+{{with $CloudsqlServiceAcct := vault (printf "secret/dsde/verily/%s/cromwell/cromwell-sqlproxy-account.json" $environment)}}
+
+{{$CloudsqlServiceAcct.Data | toJSONPretty}}
+
+{{end}}{{end}}

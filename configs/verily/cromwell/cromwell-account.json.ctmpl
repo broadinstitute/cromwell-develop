@@ -1,0 +1,1 @@
+{{with $env := env "ENV"}}{{with $cromwellServiceAccount := vault (printf "secret/dsde/verily/%s/cromwell/cromwell-service-account.json" $env)}}{{$cromwellServiceAccount.Data | toJSONPretty }}{{end}}{{end}}
