@@ -1,0 +1,2 @@
+{{with $environment := env "ENVIRONMENT"}}{{with $htpasswd := vault (printf "secret/dsde/verily/%s/common/htpasswd" $environment)}}login:{{$htpasswd.Data.value}}
+{{end}}{{end}}

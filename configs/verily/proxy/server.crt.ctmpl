@@ -1,1 +1,1 @@
-{{with $env := env "ENV"}}{{with $commonSsl := vault (printf "secret/dsde/dsp-techops/common/value" $env)}}{{$commonSsl.Data.server_crt}}{{end}}{{end}}
+{{with $commonSsl := vault (printf "secret/dsde/dsp-techops/common/server.crt")}}{{$commonSsl.Data.value}}{{end}}

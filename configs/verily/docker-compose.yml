@@ -51,12 +51,13 @@ logger:
 sqlproxy:
   image: gcr.io/cloudsql-docker/gce-proxy:1.10
   env_file:
-    - /app/sqlprox/sqlproxy.env
+    - /app/sqlproxy/sqlproxy.env
   links:
     - logger
   volumes_from:
     - logger
-  command:  ["/bin/sh", "-c", "/cloud_sql_proxy -instances=${GOOGLE_PROJECT}:${CLOUDSQL_ZONE}:${CLOUDSQL_INSTANCE}=tcp:0.0.0.0:3306 -credential_file=${CLOUDSQL_SVCACCT_PATH}"]
+  command:  ["/bin/sh", "-c", "/start.sh"]
   volumes:
-     - /app/sqlproxy/cromwell-cloudsql-account.json:
+     - /app/sqlproxy/start.sh:/start.sh
+     - /app/sqlproxy/cromwell-cloudsql-account.json:/etc/cromwell-cloudsql-account.json
   restart: always

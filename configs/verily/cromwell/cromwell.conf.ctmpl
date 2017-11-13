@@ -1,4 +1,4 @@
-{{with $env := env "ENV"}}{{with $cromwellSecrets := vault (printf "secret/dsde/verily/%s/cromwell/secrets" $env)}}
+{{with $environment := env "ENVIRONMENT"}}{{with $cromwellSecrets := vault (printf "secret/dsde/verily/%s/cromwell/secrets" $environment)}}
 include "application.conf"
 
 akka {
