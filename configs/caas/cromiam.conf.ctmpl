@@ -1,5 +1,5 @@
 {{with $environment := env "ENVIRONMENT"}}
-{{with $cromiamSecrets := vault (printf "secret/dsde/caas/%s/cromiam/secrets" $environment)}}
+{{with $cromiamAuthToken := vault (printf "secret/dsde/caas/%s/cromiam/auth-token" $environment)}}
 
 cromiam {
   interface = "0.0.0.0"
@@ -19,9 +19,9 @@ cromwell {
 }
 
 swagger_oauth {
-  client_id = "{{$cromiamSecrets.Data.client_id}}"
-  realm = "{{$cromiamSecrets.Data.realm}}"
-  app_name = "{{$cromiamSecrets.Data.app_name}}"
+  client_id = "{{$cromiamSecrets.Data.web.client_id}}"
+  realm = "broad-dsde-dev"
+  app_name = "cromiam"
 }
 
 {{end}}
