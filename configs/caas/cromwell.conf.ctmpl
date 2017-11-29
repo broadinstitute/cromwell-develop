@@ -100,7 +100,7 @@ workflow-options {
   encrypted-fields: ["refresh_token"]
 
   # AES-256 key to use to encrypt the values in `encrypted-fields`
-  base64-encryption-key: "{{$commonSecrets.Data.workflow_options_encryption_key}}"
+  base64-encryption-key: "{{$cromwellSecrets.Data.workflow_options_encryption_key}}"
 
   # Directory where to write per workflow logs
   workflow-log-dir: "cromwell-workflow-logs"
@@ -143,8 +143,7 @@ google {
     {
       name = "service-account"
       scheme = "service_account"
-      service-account-id = "{{$commonSecrets.Data.service_auth_service_account_id}}"
-      pem-file = "/etc/cromwell-account.pem"
+      json-file = "/etc/cromwell-account.json"
     }
   ]
 }
