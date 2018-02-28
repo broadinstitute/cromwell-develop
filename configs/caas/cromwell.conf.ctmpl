@@ -97,7 +97,7 @@ system {
 
 workflow-options {
   # These workflow options will be encrypted when stored in the database
-  encrypted-fields: ["refresh_token"]
+  encrypted-fields: ["user_service_account_json"]
 
   # AES-256 key to use to encrypt the values in `encrypted-fields`
   base64-encryption-key: "{{$cromwellSecrets.Data.workflow_options_encryption_key}}"
@@ -130,20 +130,9 @@ google {
   application-name = "cromwell"
 
   auths = [
-    #{
-    #  name = "application-default"
-    #  scheme = "application_default"
-    #},
     {
-      name = "user-via-refresh"
-      scheme = "refresh_token"
-      client-id = "{{$refreshTokenServiceAccount.Data.web.client_id}}"
-      client-secret = "{{$refreshTokenServiceAccount.Data.web.client_secret}}"
-    },
-    {
-      name = "service-account"
-      scheme = "service_account"
-      json-file = "/etc/cromwell-account.json"
+      name = "user-service-account"
+      scheme = "user_service_account"
     }
   ]
 }
@@ -159,7 +148,7 @@ engine {
   # Note that the default filesystem (local) is always available.
   filesystems {
     gcs {
-      auth = "service-account"
+      auth = "user-service-account"
     },
     local {
     	enabled: false      
@@ -179,10 +168,10 @@ backend {
       actor-factory = "cromwell.backend.impl.jes.JesBackendLifecycleActorFactory"
       config {
         // Google project
-        project = "broad-dsde-caas-{{$environment}}"
+        project = "user_error: google_project must be set in workflow options http://cromwell.readthedocs.io/en/develop/wf_options/Google/"
 
         // Base bucket for workflow executions
-        root = "gs://broad-dsde-caas-{{$environment}}/cromwell-executions"
+        root = "user_error: jes_gcs_root must be set in workflow options http://cromwell.readthedocs.io/en/develop/wf_options/Google/"
 
         # Set this to the lower of the two values "Queries per 100 seconds" and "Queries per 100 seconds per user" for
         # your project.
@@ -206,7 +195,7 @@ backend {
         genomics {
           # A reference to an auth defined in the `google` stanza at the top.  This auth is used to create
           # Pipelines and manipulate auth JSONs.
-          auth = "service-account"
+          auth = "user-service-account"
 
           // alternative service account to use on the launched compute instance
           // NOTE: If combined with service account authorization, both that serivce account and this service account
@@ -220,7 +209,7 @@ backend {
         filesystems {
           gcs {
             # A reference to a potentially different auth for manipulating files via engine functions.
-            auth = "service-account"
+            auth = "user-service-account"
           }
         }
       }
