@@ -28,7 +28,7 @@ services:
     logging:
       driver: "syslog"
     environment:
-      JAVA_OPTS: -Xmx20g -Xms20g -Dscala.concurrent.context.minThreads=50 -Dscala.concurrent.context.numThreads=50 -Dscala.concurrent.context.maxThreads=50 -Xmx2g -Xms2g -Djavax.net.ssl.keyStore=/etc/ssl/cromwell.keystore -Djavax.net.ssl.keyStorePassword=changeit -Djavax.net.ssl.trustStore=/etc/ssl/cromwell.truststore -Djavax.net.ssl.trustStorePassword=changeit -Dconfig.file=/etc/cromwell.conf -XX:+PrintFlagsFinal -XX:+PrintGCTimeStamps -XX:+PrintGCDateStamps -XX:+PrintGCDetails -DLOG_MODE=FILEROLLER -DFILEROLLER_NAME=cromwell.log -DFILEROLLER_DIR=/logs/cromwell -DFILEROLLER_MAXHISTORY=365
+      JAVA_OPTS: -Xmx20G -Xms20G -Dscala.concurrent.context.minThreads=50 -Dscala.concurrent.context.numThreads=50 -Dscala.concurrent.context.maxThreads=50 -Xmx2g -Xms2g -Djavax.net.ssl.keyStore=/etc/ssl/cromwell.keystore -Djavax.net.ssl.keyStorePassword=changeit -Djavax.net.ssl.trustStore=/etc/ssl/cromwell.truststore -Djavax.net.ssl.trustStorePassword=changeit -Dconfig.file=/etc/cromwell.conf -XX:+PrintFlagsFinal -XX:+PrintGCTimeStamps -XX:+PrintGCDateStamps -XX:+PrintGCDetails -DLOG_MODE=FILEROLLER -DFILEROLLER_NAME=cromwell.log -DFILEROLLER_DIR=/logs/cromwell -DFILEROLLER_MAXHISTORY=365
       CROMWELL_ARGS: server
     volumes:
       - /etc/localtime:/etc/localtime:ro
