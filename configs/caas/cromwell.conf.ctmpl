@@ -22,6 +22,10 @@ akka {
 
   actor.guardian-supervisor-strategy = "cromwell.core.CromwellUserGuardianStrategy"
 
+  priority-mailbox {
+    mailbox-type = "akka.dispatch.UnboundedControlAwareMailbox"
+  }
+
   dispatchers {
     # A dispatcher for actors performing blocking io operations
     # Prevents the whole system from being slowed down when waiting for responses from external resources for instance
@@ -39,7 +43,7 @@ akka {
     }
 
     # A dispatcher for engine actors
-    # Because backends behaviour is unpredictable (potentially blocking, slow) the engine runs
+    # Because backends behavior is unpredictable (potentially blocking, slow) the engine runs
     # on its own dispatcher to prevent backends from affecting its performance.
     engine-dispatcher {
       type = Dispatcher
@@ -58,13 +62,47 @@ akka {
       executor = "fork-join-executor"
     }
 
+    # A dispatcher to bulkhead the health monitor from the rest of the system. Sets throughput low in order to
+    # ensure the monitor is fairly low priority
+    health-monitor-dispatcher {
+      type = Dispatcher
+      executor = "thread-pool-executor"
+      thread-pool-executor {
+        fixed-pool-size = 4
+      }
+
+      throughput = 1
+    }
     # Note that without further configuration, all other actors run on the default dispatcher
+  }
+
+  coordinated-shutdown.phases {
+    abort-all-workflows {
+      # This phase is used to give time to Cromwell to abort all workflows upon shutdown.
+      # It's only used if system.abort-jobs-on-terminate = true
+      # This timeout can be adjusted to give more or less time to Cromwell to abort workflows
+      timeout = 1 hour
+      depends-on = [service-unbind]
+    }
+
+    stop-io-activity{
+      # Adjust this timeout according to the maximum amount of time Cromwell
+      # should be allowed to spend flushing its database queues
+      timeout = 30 minutes
+      depends-on = [service-stop]
+    }
   }
 }
 
 system {
   # If 'true', a SIGINT will trigger Cromwell to attempt to abort all currently running jobs before exiting
   #abort-jobs-on-terminate = false
+
+  # If 'true', a SIGTERM or SIGINT will trigger Cromwell to attempt to gracefully shutdown in server mode,
+  # in particular clearing up all queued database writes before letting the JVM shut down.
+  # The shutdown is a multi-phase process, each phase having its own configurable timeout. See the Dev Wiki for more details.
+  # FC NOTE: reenable this when we want to actually do graceful shutdowns (not just kill the container)
+  graceful-server-shutdown = false
 
   # Max number of retries per job that the engine will attempt in case of a retryable failure received from the backend
   max-retries = 10
@@ -83,15 +121,43 @@ system {
 
   # Since the WorkflowLogCopyRouter is initialized in code, this is the number of workers
   number-of-workflow-log-copy-workers = 10
-  
+
+  # Default number of cache read workers
+  number-of-cache-read-workers = 25
+
   io {
     # Throttle for GCS calls.
     # this is our quota on broad-dsde-prod
     number-of-requests = 10240611
     per = 100 seconds
-	
+
     # Number of times an I/O operation should be attempted before giving up and failing it.
     number-of-attempts = 5
+
+    # Amount of time after which an I/O operation will timeout if no response has been received.
+    # Note that a timeout may result in a workflow failure so be careful not to set a timeout too low.
+    # Unless you start experiencing timeouts under very heavy load there should be no reason to change the default values.
+    timeout {
+      default = 3 minutes
+      # Copy can be a time consuming operation and its timeout can be set separately.
+      copy = 1 hour
+    }
+
+    gcs {
+      parallelism = 10
+    }
+
+    nio {
+      parallellism = 10
+    }
+  }
+
+  # Rate at which Cromwell updates it's instrumentation gauge metrics (e.g: Number of workflows running, queued, etc..)
+  instrumentation-rate = 5 seconds
+
+  job-rate-control {
+    jobs = 50
+    per = 1 second
   }
 }
 
@@ -137,6 +203,24 @@ google {
   ]
 }
 
+docker {
+  hash-lookup {
+    // /!\ Attention /!\
+    // If you disable this call caching will be disabled for jobs with floating docker tags !
+    enabled = true
+    // Set this to match your available quota against the Google Container Engine API
+    gcr-api-queries-per-100-seconds = 1000
+    // Time in minutes before an entry expires from the docker hashes cache and needs to be fetched again
+    cache-entry-ttl = "20 minutes"
+    // Maximum number of elements to be kept in the cache. If the limit is reached, old elements will be removed from the cache
+    cache-size = 200
+    // How should docker hashes be looked up. Possible values are "local" and "remote"
+    // "local": Lookup hashes on the local docker daemon using the cli
+    // "remote": Lookup hashes on docker hub and gcr
+    method = "remote"
+  }
+}
+
 engine {
   # This instructs the engine which filesystems are at its disposal to perform any IO operation that it might need.
   # For instance, WDL variables declared at the Workflow level will be evaluated using the filesystems declared here.
@@ -151,10 +235,30 @@ engine {
       auth = "user-service-account"
     },
     local {
-    	enabled: false      
+      enabled: false
     }
   }
 }
+
+languages {
+  WDL {
+    versions {
+      "draft-2" {
+        language-factory = "languages.wdl.draft2.WdlDraft2LanguageFactory"
+      }
+      "draft-3" {
+        language-factory = "languages.wdl.draft3.WdlDraft3LanguageFactory"
+      }
+    }
+  }
+#   CWL {
+#     versions {
+#       "v1.0" {
+#         language-factory = "languages.cwl.CwlV1_0LanguageFactory"
+#       }
+#     }
+#   }
+ }
 
 backend {
   default = "JES"
@@ -180,7 +284,7 @@ backend {
         # cause a drop in performance. Setting this value too high will cause QPS based locks from Google.
         # 1000 is the default "Queries per 100 seconds per user", 50000 is the default "Queries per 100 seconds"
         # See https://cloud.google.com/genomics/quotas for more information
-        genomics-api-queries-per-100-seconds = 1000
+        genomics-api-queries-per-100-seconds = 50000
 
         # Polling for completion backs-off gradually for slower-running jobs.
         # This is the maximum polling interval (in seconds):
@@ -228,6 +332,19 @@ services {
       # metadata-summary-refresh-interval = "Inf"
     }
   }
+  Instrumentation {
+     # Default noop service - instrumentation metrics are ignored
+     class = "cromwell.services.instrumentation.impl.noop.NoopInstrumentationServiceActor"
+  }
+  LoadController {
+    class = "cromwell.services.loadcontroller.impl.LoadControllerServiceActor"
+    config {
+      # The load controller service will periodically look at the status of various metrics its collecting and make an
+      # assessment of the system's load. If necessary an alert will be sent to the rest of the system.
+      # This option sets how frequently this should happen
+      control-frequency = 5 seconds
+    }
+  }
 }
 
 database {
@@ -252,5 +369,71 @@ database {
     # of control we monitor its size and execute/commit when it reaches or exceeds writeBatchSize.
     write-batch-size = 100000
   }
+}
+
+# Configuration for load-control related values
+load-control {
+  ## Queue Size Thresholds ##
+  # Cromwell centralizes some operations through singleton actors (possibly acting as routers).
+  # This allows for a more efficient control, throttling, and potentially batching of those operations which overall improves throughput.
+  # In order to do that, those operations are queued until they can be performed.
+  # Those queues are for the most part unbounded in size, which can become a problem under heavy load.
+  # Each actor can however let the load controller service know when it considers its work load to be abnormally high.
+  # In the case of those queuing actors, this means that their queue size is over a certain threshold.
+  # This section allows to configure those threshold values.
+  # They should be kept at a reasonable number where reasonable will depend on your system and how much load Cromwell is submitted to.
+  # If they're too high they could end up using a lot of memory, if they're too small any small spike will be considered a high load and the system will automatically slow itself down.
+  # Benchmarking is recommended to find the values that suit your use case best.
+  # If you use the statsD instrumentation service, the queue size and throughput of these actors are instrumented and looking at their value over time can also help you find the right configuration.
+
+  # FC NOTE: this is only applicable for workflow restart (which only occurs on cromwell restart)
+  #          we should track this when we restart cromwell (monitor queue size and throughput)
+  job-store-read = 10000
+  # FC NOTE: this occurs when we workflow jobs are running.  we should monitor queue size and throughput
+  #          while cromwell is running to determine if we need to change this value
+  job-store-write = 10000
+
+
+  # call cache read actors are routed (several actors are performing cache read operations
+  # this threshold applies to each routee individually, so set it to a lower value to account for that
+  # to change the number of routees, see the services.number-of-cache-read-workers config value
+  # FC NOTE: monitor queue size and throughput when we are seeing jobs that are slowed down by
+  #          call cache lookup step
+  call-cache-read = 1000
+  call-cache-write = 10000
+
+  # FC NOTE: this is storing of the papi job id only at the moment
+  key-value-read = 10000
+  key-value-write = 10000
+
+
+  # The I/O queue has the specificity to be bounded. This sets its size
+  # FC NOTE: io operations directly to google buckets (e.g. exec.sh)
+  io-queue-size = 10000
+  # If the I/O queue is full, subsequent requests are rejected and to be retried later.
+  # This time window specifies how much time without request rejection consititutes a "back to normal load" event
+  io-normal-window = 10s
+
+  # FC NOTE: we should closely watch this one since it's a known bottleneck for FC
+  # metadata is an order of magnitude higher because its normal load is much higher than other actors
+  metadata-write = 100000
+
+  ## Backend specific ##
+  # Google requests to the Pipelines API are also queued and batched
+  papi-requests = 10000
+
+  ## Misc. ##
+  # How often each actor should update its perceived load
+  monitoring-frequency = 5 seconds
+
+  # FC NOTE: at the moment memory management below isn't really working right anyway,
+  #          but doesn't cause harm. leave alone for now
+  # Memory is monitored by looking at the amount of free memory left
+  memory-threshold-in-mb = 1024
+  # Because memory measurements are not precise, the last memory-measurement-window measurements are recorded
+  # and changes on load are only triggered if all measurements are below or above the threshold
+  # The default value 6 combined with a monitoring frequencey of 5 seconds means that load alerts are triggered
+  # If the memory is below the threshold for at least 30 consecutive seconds
+  memory-measurement-window = 6
 }
 {{end}}{{end}}{{end}}{{end}}
