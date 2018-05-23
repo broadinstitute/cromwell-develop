@@ -269,7 +269,7 @@ backend {
     }
 
     JES {
-      actor-factory = "cromwell.backend.impl.jes.JesBackendLifecycleActorFactory"
+      actor-factory = "cromwell.backend.google.pipelines.v1alpha2.PipelinesApiLifecycleActorFactory"
       config {
         // Google project
         project = "user_error: google_project must be set in workflow options http://cromwell.readthedocs.io/en/develop/wf_options/Google/"
