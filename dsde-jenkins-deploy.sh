@@ -111,7 +111,10 @@ fi
 
 # Start new application container with the current version
 $SSHCMD $SSH_USER@$SSH_HOST "docker-compose -p $PROJECT -f $COMPOSE_FILE  pull"
-$SSHCMD $SSH_USER@$SSH_HOST "docker-compose -p $PROJECT -f $COMPOSE_FILE stop"
+
+# Stop w/ 90 second cooldown
+$SSHCMD $SSH_USER@$SSH_HOST "docker-compose -t 90 -p $PROJECT -f $COMPOSE_FILE stop"
+
 $SSHCMD $SSH_USER@$SSH_HOST "docker-compose -p $PROJECT -f $COMPOSE_FILE rm -f"
 $SSHCMD $SSH_USER@$SSH_HOST "docker-compose -p $PROJECT -f $COMPOSE_FILE up -d"
 

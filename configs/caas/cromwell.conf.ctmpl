@@ -88,7 +88,7 @@ akka {
     stop-io-activity{
       # Adjust this timeout according to the maximum amount of time Cromwell
       # should be allowed to spend flushing its database queues
-      timeout = 30 minutes
+      timeout = 90 seconds
       depends-on = [service-stop]
     }
   }
@@ -102,7 +102,7 @@ system {
   # in particular clearing up all queued database writes before letting the JVM shut down.
   # The shutdown is a multi-phase process, each phase having its own configurable timeout. See the Dev Wiki for more details.
   # FC NOTE: reenable this when we want to actually do graceful shutdowns (not just kill the container)
-  graceful-server-shutdown = false
+  graceful-server-shutdown = true
 
   # Max number of retries per job that the engine will attempt in case of a retryable failure received from the backend
   max-retries = 10
