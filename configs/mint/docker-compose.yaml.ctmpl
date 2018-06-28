@@ -24,7 +24,7 @@ services:
       PROXY_URL2: http://app:8000/api
     restart: always
   cromwell-app:
-    image: broadinstitute/cromwell:30-16f3632
+    image: broadinstitute/cromwell:33-e90c4de
     logging:
       driver: "syslog"
     environment:
