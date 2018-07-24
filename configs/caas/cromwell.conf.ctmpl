@@ -1,7 +1,6 @@
 {{with $environment := env "ENVIRONMENT"}}
 {{with $cromwellSecrets := vault (printf "secret/dsde/caas/%s/cromwell/secrets" $environment)}}
 {{with $commonSecrets := vault (printf "secret/dsde/caas/%s/common/secrets" $environment)}}
-{{with $refreshTokenServiceAccount := vault (printf "secret/dsde/caas/%s/common/refresh-token-service-account.json" $environment)}}
 
 include "application.conf"
 
@@ -436,4 +435,4 @@ load-control {
   # If the memory is below the threshold for at least 30 consecutive seconds
   memory-measurement-window = 6
 }
-{{end}}{{end}}{{end}}{{end}}
+{{end}}{{end}}{{end}}
