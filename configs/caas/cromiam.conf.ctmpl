@@ -7,7 +7,7 @@ cromiam {
 }
 
 sam {
-  interface = "sam.dsde-dev.broadinstitute.org"
+  interface = "sam.dsde-{{$environment}}.broadinstitute.org"
   port = 443
   scheme = "https"
 }
@@ -20,7 +20,7 @@ cromwell {
 
 swagger_oauth {
   client_id = "{{$cromiamAuthToken.Data.web.client_id}}"
-  realm = "broad-dsde-dev"
+  realm = "broad-dsde-{{$environment}}"
   app_name = "cromiam"
 }
 
