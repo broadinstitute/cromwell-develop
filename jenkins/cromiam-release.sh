@@ -16,7 +16,7 @@ then
   done
   echo "ENV=${ENV}" >> cromwell.properties
   echo "PROJECT=caas" >> cromwell.properties
-  echo "BRANCH=hf_cleanup" >> cromwell.properties
+  echo "BRANCH=${GIT_BRANCH}" >> cromwell.properties
 
 else
   echo; echo "DOCKER_TAG was not set! Nothing to do!  Exiting!"; echo
