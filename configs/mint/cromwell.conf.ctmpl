@@ -86,6 +86,30 @@ system {
     # Number of times an I/O operation should be attempted before giving up and failing it.
     number-of-attempts = 5
   }
+
+  # Maximum number of input file bytes allowed in order to read each type.
+  # If exceeded a FileSizeTooBig exception will be thrown.
+  # some of these upped for FC
+  input-read-limits {
+
+    lines = 10000000
+
+    json = 10000000
+
+    tsv = 10000000
+
+    object = 10000000
+
+    #bool = 7
+
+    #int = 19
+
+    #float = 50
+
+    #string = 128000
+
+    #map = 128000
+  }
 }
 
 // Optional call-caching configuration.
@@ -199,6 +223,68 @@ backend {
         }
       }
     }
+
+    PAPIv2 {
+      actor-factory = "cromwell.backend.google.pipelines.v2alpha1.PipelinesApiLifecycleActorFactory"
+      config {
+        // Google project
+        project = "broad-dsde-mint-{{$environment}}"
+
+        // Base bucket for workflow executions
+        root = "gs://broad-dsde-mint-{{$environment}}-cromwell-execution/cromwell-executions"
+
+        # Set this to the lower of the two values "Queries per 100 seconds" and "Queries per 100 seconds per user" for
+        # your project.
+        #
+        # Used to help determine maximum throughput to the Google Genomics API. Setting this value too low will
+        # cause a drop in performance. Setting this value too high will cause QPS based locks from Google.
+        # 1000 is the default "Queries per 100 seconds per user", 50000 is the default "Queries per 100 seconds"
+        # See https://cloud.google.com/genomics/quotas for more information
+        genomics-api-queries-per-100-seconds = 50000
+
+        # Polling for completion backs-off gradually for slower-running jobs.
+        # This is the maximum polling interval (in seconds):
+        maximum-polling-interval = 600
+
+        # Set the maximum number of jobs that PAPI will run at the same time to 75k. This throttle is currently required
+        # to limit the amount of metadata published to the WriteMetadataActor. If the WriteMetadataActor backs up with
+        # too many events to write to the database, the large amount of memory will produce GC thrashing. The increased
+        # GC slows down the metadata flushing, backing up the WriteMetadataActor even more until Cromwell runs out of
+        # memory.
+        concurrent-job-limit = 75000
+
+        # Optional Dockerhub Credentials. Can be used to access private docker images.
+        dockerhub {
+          account = "dockerhub@broadinstitute.org"
+          token = "{{$commonSecrets.Data.docker_token}}"
+        }
+
+        genomics {
+          # A reference to an auth defined in the `google` stanza at the top.  This auth is used to create
+          # Pipelines and manipulate auth JSONs.
+          auth = "service-account"
+
+          // alternative service account to use on the launched compute instance
+          // NOTE: If combined with service account authorization, both that serivce account and this service account
+          // must be able to read and write to the 'root' GCS path
+          // compute-service-account = "default"
+
+          # Endpoint for APIs, no reason to change this unless directed by Google.
+          endpoint-url = "https://genomics.googleapis.com/"
+
+          # Restrict access to VM metadata. Useful in cases when untrusted containers are running under a service
+          # account not owned by the submitting user
+          restrict-metadata-access = false
+        }
+
+       filesystems {
+          gcs {
+            # A reference to a potentially different auth for manipulating files via engine functions.
+            auth = "service-account"
+          }
+        }
+      }
+    }
   }
 }
 
@@ -206,11 +292,46 @@ services {
   KeyValue {
     class = "cromwell.services.keyvalue.impl.SqlKeyValueServiceActor"
   }
+
   MetadataService {
     class = "cromwell.services.metadata.impl.MetadataServiceActor"
     config {
-      # Set this value to "Inf" to turn off metadata summary refresh.  The default value is currently "2 seconds".
-      # metadata-summary-refresh-interval = "Inf"
+      #   For normal usage the default value of 200 should be fine but for larger/production environments we recommend a
+      #   value of at least 500. There'll be no one size fits all number here so we recommend benchmarking performance and
+      #   tuning the value to match your environment.
+      db-batch-size = 1000
+
+      #   Periodically the stored metadata events will be forcibly written to the DB regardless of if the batch size
+      #   has been reached. This is to prevent situations where events wind up never being written to an incomplete batch
+      #   with no new events being generated. The default value is currently 5 seconds
+      db-flush-rate = 1 second
+    }
+  }
+
+  HealthMonitor {
+    class = "cromwell.services.healthmonitor.impl.workbench.WorkbenchHealthMonitorServiceActor"
+
+        config {
+          # This *MUST* be set to the name of the PAPI backend defined in the Backends stanza.
+          papi-backend-name = JES
+
+          # The name of an authentication scheme to use for e.g. pinging PAPI and GCS. This should be either an application
+          # default or service account auth, otherwise things won't work as there'll not be a refresh token where you need
+          # them.
+          google-auth-name = service-account
+
+          # A bucket in GCS to periodically stat to check for connectivity. This must be accessible by the auth mode
+          # specified by google-auth-name
+          gcs-bucket-to-check = "broad-dsde-mint-{{$environment}}-cromwell-execution" #this has to be per env
+        }
+  }
+
+  LoadController {
+    config {
+      # The load controller service will periodically look at the status of various metrics its collecting and make an
+      # assessment of the system's load. If necessary an alert will be sent to the rest of the system.
+      # This option sets how frequently this should happen
+      control-frequency = 5 seconds
     }
   }
 }
@@ -224,6 +345,10 @@ database {
     password = "{{$cromwellSecrets.Data.db_password}}"
     connectionTimeout = 60000
     numThreads = 200
+    minThreads = 200
+    maxThreads = 200
+    minConnections = 200
+    maxConnections = 200
   }
 
   migration {
@@ -238,4 +363,5 @@ database {
     write-batch-size = 100000
   }
 }
+
 {{end}}{{end}}{{end}}
