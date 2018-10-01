@@ -314,6 +314,7 @@ backend {
             # A reference to a potentially different auth for manipulating files via engine functions.
             auth = "user-service-account"
           }
+	  http {}
         }
       }
     }
