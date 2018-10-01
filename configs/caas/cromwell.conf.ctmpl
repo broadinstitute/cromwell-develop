@@ -375,6 +375,7 @@ backend {
             auth = "user-service-account"
           }
           demo-dos {}
+          http {}
         }
       }
     }
