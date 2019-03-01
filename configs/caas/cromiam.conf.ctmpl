@@ -6,6 +6,10 @@ cromiam {
   port = 8080
 }
 
+# Json payloads to/from cromwell up to 100 MiB
+akka.http.client.parsing.max-content-length=104857600
+akka.http.server.parsing.max-content-length=104857600
+
 sam {
   interface = "sam.dsde-{{$environment}}.broadinstitute.org"
   port = 443
