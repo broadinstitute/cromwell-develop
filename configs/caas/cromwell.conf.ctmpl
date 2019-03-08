@@ -391,7 +391,9 @@ services {
     class = "cromwell.services.metadata.impl.MetadataServiceActor"
     config {
       # Set this value to "Inf" to turn off metadata summary refresh.  The default value is currently "2 seconds".
-      # metadata-summary-refresh-interval = "Inf"
+      #only turn this on for the summarizer
+      {{if $instanceType  | contains "summarizer" }}metadata-summary-refresh-interval="2 seconds"{{else}}metadata-summary-refresh-interval = "Inf"{{end}}
+
     }
   }
   Instrumentation {
