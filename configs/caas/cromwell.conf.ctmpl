@@ -1,6 +1,7 @@
 {{with $environment := env "ENVIRONMENT"}}
 {{with $cromwellSecrets := vault (printf "secret/dsde/caas/%s/cromwell/secrets" $environment)}}
 {{with $commonSecrets := vault (printf "secret/dsde/caas/%s/common/secrets" $environment)}}
+{{with $instanceType := env "INSTANCE_TYPE"}}
 
 include "application.conf"
 
@@ -107,16 +108,16 @@ system {
   max-retries = 10
 
   # If 'true' then when Cromwell starts up, it tries to restart incomplete workflows
-  workflow-restart = true
+  workflow-restart ={{if $instanceType  | contains "summarizer" }} false {{else}} true {{end}}
 
   # Cromwell will cap the number of running workflows at N
   max-concurrent-workflows = 25000
 
   # Cromwell will launch up to N submitted workflows at a time, regardless of how many open workflow slots exist
-  max-workflow-launch-count = 50
+  max-workflow-launch-count ={{if $instanceType  | contains "summarizer" }} 0 {{else}} 50 {{end}}
 
   # Number of seconds between workflow launches
-  new-workflow-poll-rate = 20
+  new-workflow-poll-rate ={{if $instanceType  | contains "summarizer" }} 999999 {{else}} 20 {{end}}
 
   # Since the WorkflowLogCopyRouter is initialized in code, this is the number of workers
   number-of-workflow-log-copy-workers = 10
@@ -497,4 +498,4 @@ load-control {
   # If the memory is below the threshold for at least 30 consecutive seconds
   memory-measurement-window = 6
 }
-{{end}}{{end}}{{end}}
+{{end}}{{end}}{{end}}{{end}}
