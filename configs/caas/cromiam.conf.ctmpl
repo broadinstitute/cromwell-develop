@@ -22,6 +22,20 @@ cromwell {
   scheme = "http"
 }
 
+akka {
+  # Optionally set / override any akka settings
+  http {
+    server {
+      # Increasing these timeouts allow rest api responses for very large jobs
+      # to be returned to the user. When the timeout is reached the server would respond
+      # `The server was not able to produce a timely response to your request.`
+      # https://gatkforums.broadinstitute.org/wdl/discussion/10209/retrieving-metadata-for-large-workflows
+      request-timeout = 60s
+      # idle-timeout = 20s
+    }
+  }
+}
+
 swagger_oauth {
   client_id = "{{$cromiamAuthToken.Data.web.client_id}}"
   realm = "broad-dsde-{{$environment}}"
