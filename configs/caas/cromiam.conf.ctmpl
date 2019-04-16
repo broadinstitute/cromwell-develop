@@ -31,7 +31,7 @@ akka {
       # `The server was not able to produce a timely response to your request.`
       # https://gatkforums.broadinstitute.org/wdl/discussion/10209/retrieving-metadata-for-large-workflows
       request-timeout = 60s
-      idle-timeout = 20s
+      idle-timeout = 60s
     }
   }
 }
