@@ -10,6 +10,10 @@ cromiam {
 akka.http.client.parsing.max-content-length=104857600
 akka.http.server.parsing.max-content-length=104857600
 
+#Increased from 20s default to allow large metadata responses
+akka.http.server.request-timeout = 55s
+akka.http.server.idle-timeout = 55s
+
 sam {
   interface = "sam.dsde-{{$environment}}.broadinstitute.org"
   port = 443

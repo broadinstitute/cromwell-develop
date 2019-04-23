@@ -91,6 +91,10 @@ akka {
       depends-on = [service-stop]
     }
   }
+
+  #Increased from 20s default to allow large metadata responses
+  http.server.request-timeout = 55s
+  http.server.idle-timeout = 55s
 }
 
 system {
@@ -158,6 +162,26 @@ system {
     jobs = 50
     per = 1 second
   }
+
+  # More info: https://docs.google.com/presentation/d/14VgNBDE8Don_oeOOPIWtJQC5OUrcpk3Vip5AQBBCSs4/edit
+  hog-safety {
+    # Have seen a comment referring briefly to about "4k ips per person"(???).
+    # Meanwhile, this config file sets "concurrent-job-limit = 75000".
+    # Based on the calculations in the presentation above: 75k / 4k ~= 19
+    # If you know any additional information about the IP limit, etc., please update this comment.
+    hog-factor = 19
+
+    # This is the name of the workflow option that will be sent via workflow the options file and used for hog factor
+    #calculations.
+    workflow-option = "google_project"
+
+    # Interval between token logs in seconds.
+    token-log-interval-seconds = 300
+  }
+
+  # Cache file hashes within the scope of a root workflow to prevent repeatedly requesting the
+  # hashes of the same files multiple times.
+  file-hash-cache = true
 }
 
 workflow-options {
@@ -188,6 +212,15 @@ call-caching {
   # to fail for external reasons which should not invalidate the cache (e.g. auth differences between users):
   # (default: true)
   invalidate-bad-cache-results = false
+
+  # Filter call cache hits based on authorization failures copying previous call cache hits.
+  # May need to be adjusted in the future.
+  blacklist-cache {
+    enabled = true
+    ttl = "1 days"
+    size = 5000
+    concurrency = 1000
+  }
 }
 
 google {
@@ -412,6 +445,7 @@ database {
   profile = "slick.jdbc.MySQLProfile$"
   db {
     driver = "com.mysql.jdbc.Driver"
+    # driver = "com.mysql.cj.jdbc.Driver" <-- Switching *after* the PROD instance upgrades to 38. Til then will generate log warnings.
     url = "jdbc:mysql://cromwell-mysql.caas-{{$environment}}.broadinstitute.org:3306/cromwell?requireSSL=true&useSSL=true&rewriteBatchedStatements=true"
     user = "{{$cromwellSecrets.Data.db_user}}"
     password = "{{$cromwellSecrets.Data.db_password}}"
