@@ -223,6 +223,17 @@ call-caching {
   }
 }
 
+drs {
+    localization {
+        # The Docker image that contains the Martha URL-resolving and localizing script.
+        docker-image = "broadinstitute/cromwell-dos:34-d8acfe3"
+        command-template = "mkdir -p $(dirname ${containerPath}) && /scripts/dosUrlLocalizer.sc ${drsPath} ${containerPath}"
+    }
+}
+
+# This overrides the Martha URL in reference.conf.
+filesystems.drs.global.config.martha.url = "https://us-central1-broad-dsde-{{$environment}}.cloudfunctions.net/martha_v2"
+
 google {
 
   application-name = "cromwell"
@@ -264,6 +275,9 @@ engine {
   # Note that the default filesystem (local) is always available.
   filesystems {
     gcs {
+      auth = "user-service-account"
+    },
+    drs {
       auth = "user-service-account"
     },
     local {
@@ -407,7 +421,9 @@ backend {
             # A reference to a potentially different auth for manipulating files via engine functions.
             auth = "user-service-account"
           }
-          demo-dos {}
+          drs {
+            auth = "user-service-account"
+          }
           http {}
         }
       }
