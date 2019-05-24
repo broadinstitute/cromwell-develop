@@ -128,6 +128,16 @@ system {
   # Default number of cache read workers
   number-of-cache-read-workers = 25
 
+  # Maximum scatter width per scatter node. Cromwell will fail the workflow if the scatter width goes beyond N
+  # CJL: 5/24/19: Setting this low in response to https://broadworkbench.atlassian.net/browse/PROD-137.
+  max-scatter-width-per-scatter = 75000
+
+  # Total max. jobs that can be created per root workflow. If it goes beyond N, Cromwell will fail the workflow by:
+  # - no longer creating new jobs
+  # - let the jobs that have already been started finish, and then fail the workflow
+  # CJL: 5/24/19: Setting this low as an additional response to https://broadworkbench.atlassian.net/browse/PROD-137.
+  total-max-jobs-per-root-workflow = 200000
+
   io {
     # Throttle for GCS calls.
     # this is our quota on broad-dsde-prod
@@ -317,6 +327,8 @@ backend {
     JES {
       actor-factory = "cromwell.backend.google.pipelines.v1alpha2.PipelinesApiLifecycleActorFactory"
       config {
+        slow-job-warning-time: 24 hours
+
         // Google project
         project = "user_error: google_project must be set in workflow options http://cromwell.readthedocs.io/en/develop/wf_options/Google/"
 
@@ -369,6 +381,8 @@ backend {
     PAPIv2 {
       actor-factory = "cromwell.backend.google.pipelines.v2alpha1.PipelinesApiLifecycleActorFactory"
       config {
+        slow-job-warning-time: 24 hours
+
         // Google project
         project = "user_error: google_project must be set in workflow options http://cromwell.readthedocs.io/en/develop/wf_options/Google/"
 
@@ -415,8 +429,13 @@ backend {
           # account not owned by the submitting user
           restrict-metadata-access = false
         }
-
-       filesystems {
+        batch-requests {
+          timeouts {
+            read = 120 seconds
+            connect = 120 seconds
+          }
+        }
+        filesystems {
           gcs {
             # A reference to a potentially different auth for manipulating files via engine functions.
             auth = "user-service-account"
@@ -440,6 +459,9 @@ services {
     config {
       # Set this value to "Inf" to turn off metadata summary refresh.  The default value is currently "2 seconds".
       # metadata-summary-refresh-interval = "Inf"
+
+
+      metadata-summary-refresh-limit = 50000
     }
   }
   Instrumentation {
