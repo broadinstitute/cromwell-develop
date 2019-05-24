@@ -392,7 +392,7 @@ services {
     config {
       # Set this value to "Inf" to turn off metadata summary refresh.  The default value is currently "2 seconds".
       #only turn this on for the summarizer
-      {{if $instanceType  | contains "summarizer" }}metadata-summary-refresh-interval="2 seconds"{{else}}metadata-summary-refresh-interval = "Inf"{{end}}
+      metadata-summary-refresh-interval={{if $instanceType  | contains "summarizer" }} "2 seconds" {{else}} "Inf" {{end}}
 
     }
   }
