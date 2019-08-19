@@ -235,8 +235,9 @@ call-caching {
 
 drs {
     localization {
-        # The Docker image that contains the Martha URL-resolving and localizing code.
-        docker-image = "broadinstitute/cromwell-drs-localizer:45-d46ff9f"
+        # The Docker image that contains the Martha URL-resolving and localizing script.
+        docker-image = "broadinstitute/cromwell-dos:34-d8acfe3"
+        command-template = "mkdir -p $(dirname ${containerPath}) && /scripts/dosUrlLocalizer.sc ${drsPath} ${containerPath}"
     }
 }
 
