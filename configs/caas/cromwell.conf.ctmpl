@@ -176,7 +176,7 @@ system {
   # More info: https://docs.google.com/presentation/d/14VgNBDE8Don_oeOOPIWtJQC5OUrcpk3Vip5AQBBCSs4/edit
   hog-safety {
     # 2400 jobs per project in PAPI
-    # Empirically, Cromwell can safely run 14400 jobs
+    # Empirically, a Cromwell of this size (8 vCPU/30 GB) can safely run 14400 jobs
     # Based on the calculations in the presentation above: 14400 / 2400 = 6
     # If you know any additional information about the IP limit, etc., please update this comment.
     hog-factor = 6
