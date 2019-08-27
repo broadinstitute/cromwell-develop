@@ -175,11 +175,11 @@ system {
 
   # More info: https://docs.google.com/presentation/d/14VgNBDE8Don_oeOOPIWtJQC5OUrcpk3Vip5AQBBCSs4/edit
   hog-safety {
-    # Have seen a comment referring briefly to about "4k ips per person"(???).
-    # Meanwhile, this config file sets "concurrent-job-limit = 75000".
-    # Based on the calculations in the presentation above: 75k / 4k ~= 19
+    # 2400 jobs per project in PAPIv2
+    # Empirically, a Cromwell of this size (8 vCPU/30 GB) can safely run 14400 jobs
+    # Based on the calculations in the presentation above: 14400 / 2400 = 6
     # If you know any additional information about the IP limit, etc., please update this comment.
-    hog-factor = 19
+    hog-factor = 6
 
     # This is the name of the workflow option that will be sent via workflow the options file and used for hog factor
     #calculations.
@@ -401,12 +401,8 @@ backend {
         # This is the maximum polling interval (in seconds):
         maximum-polling-interval = 600
 
-        # Set the maximum number of jobs that PAPI will run at the same time to 75k. This throttle is currently required
-        # to limit the amount of metadata published to the WriteMetadataActor. If the WriteMetadataActor backs up with
-        # too many events to write to the database, the large amount of memory will produce GC thrashing. The increased
-        # GC slows down the metadata flushing, backing up the WriteMetadataActor even more until Cromwell runs out of
-        # memory.
-        concurrent-job-limit = 75000
+        # This limit is based on empirical measures of Cromwell's throughput. Identical to FireCloud as of 2019-08
+        concurrent-job-limit = 14400
 
         # In FireCloud private Docker Hub configuration values will be provided in workflow options only.
         dockerhub { }
