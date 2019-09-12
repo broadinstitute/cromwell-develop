@@ -31,7 +31,7 @@ system {
   # If 'true', a SIGTERM or SIGINT will trigger Cromwell to attempt to gracefully shutdown in server mode,
   # in particular clearing up all queued database writes before letting the JVM shut down.
   # The shutdown is a multi-phase process, each phase having its own configurable timeout. See the Dev Wiki for more details.
-  # FC NOTE: reenable this when we want to actually do graceful shutdowns (not just kill the container)
+  # GOTC NOTE: reenable this when we want to actually do graceful shutdowns (not just kill the container)
   graceful-server-shutdown = false
 
   # Max number of retries per job that the engine will attempt in case of a retryable failure received from the backend
@@ -102,16 +102,7 @@ system {
 
   # More info: https://docs.google.com/presentation/d/14VgNBDE8Don_oeOOPIWtJQC5OUrcpk3Vip5AQBBCSs4/edit
   hog-safety {
-    # Empirically, we have seen that PAPIv2 starts having issues if we submit more jobs than GCS can start for a project.
-    # If we do, GCS starts returning 429s which - if they all come at the same time - break PAPI.
-    #
-    # Since we do not yet make use of private networks, or support hosts without public IPs, the number of jobs we can safely start in PAPI is around 2400 per project.
-    #
-    # Based on empirical measures of Cromwell's throughput, each Cromwell in the three-instance Horicromtal cluster
-    # sets its "concurrent-job-limit = 14400" for a total of 43,200 jobs across the cluster.
-    #
-    # Based on the formula HogLimit(2400) = TotalJobs(3 * 14400) / HogFactor, we can calculate an instance HogFactor of 18
-    hog-factor = 18
+    hog-factor = 1
 
     # This is the name of the workflow option that will be sent via workflow the options file and used for hog factor
     #calculations.
@@ -139,11 +130,6 @@ call-caching {
   # Allows re-use of existing results for jobs you've already run
   # (default: false)
   enabled = true
-
-  # Whether to invalidate a cache result forever if we cannot reuse them. Disable this if you expect some cache copies
-  # to fail for external reasons which should not invalidate the cache (e.g. auth differences between users):
-  # (default: true)
-  invalidate-bad-cache-results = false
 
   # Filter call cache hits based on authorization failures copying previous call cache hits.
   # May need to be adjusted in the future.
@@ -261,8 +247,7 @@ backend {
         # This is the maximum polling interval (in seconds):
         maximum-polling-interval = 600
 
-        # This limit is based on empirical measures of Cromwell's throughput. Identical to FireCloud as of 2019-09-04
-        concurrent-job-limit = 14400
+        concurrent-job-limit = 2400
 
         # In FireCloud private Docker Hub configuration values will be provided in workflow options only.
         dockerhub { }
@@ -357,10 +342,10 @@ load-control {
   # Benchmarking is recommended to find the values that suit your use case best.
   # If you use the statsD instrumentation service, the queue size and throughput of these actors are instrumented and looking at their value over time can also help you find the right configuration.
 
-  # FC NOTE: this is only applicable for workflow restart (which only occurs on cromwell restart)
+  # GOTC NOTE: this is only applicable for workflow restart (which only occurs on cromwell restart)
   #          we should track this when we restart cromwell (monitor queue size and throughput)
   job-store-read = 10000
-  # FC NOTE: this occurs when we workflow jobs are running.  we should monitor queue size and throughput
+  # GOTC NOTE: this occurs when we workflow jobs are running.  we should monitor queue size and throughput
   #          while cromwell is running to determine if we need to change this value
   job-store-write = 10000
 
@@ -368,24 +353,24 @@ load-control {
   # call cache read actors are routed (several actors are performing cache read operations
   # this threshold applies to each routee individually, so set it to a lower value to account for that
   # to change the number of routees, see the services.number-of-cache-read-workers config value
-  # FC NOTE: monitor queue size and throughput when we are seeing jobs that are slowed down by
+  # GOTC NOTE: monitor queue size and throughput when we are seeing jobs that are slowed down by
   #          call cache lookup step
   call-cache-read = 1000
   call-cache-write = 10000
 
-  # FC NOTE: this is storing of the papi job id only at the moment
+  # GOTC NOTE: this is storing of the papi job id only at the moment
   key-value-read = 10000
   key-value-write = 10000
 
 
   # The I/O queue has the specificity to be bounded. This sets its size
-  # FC NOTE: io operations directly to google buckets (e.g. exec.sh)
+  # GOTC NOTE: io operations directly to google buckets (e.g. exec.sh)
   io-queue-size = 10000
   # If the I/O queue is full, subsequent requests are rejected and to be retried later.
   # This time window specifies how much time without request rejection consititutes a "back to normal load" event
   io-normal-window = 10s
 
-  # FC NOTE: we should closely watch this one since it's a known bottleneck for FC
+  # GOTC NOTE: we should closely watch this one since it's a known bottleneck for GOTC
   # metadata is an order of magnitude higher because its normal load is much higher than other actors
   metadata-write = 100000
 
@@ -397,7 +382,7 @@ load-control {
   # How often each actor should update its perceived load
   monitoring-frequency = 5 seconds
 
-  # FC NOTE: at the moment memory management below isn't really working right anyway,
+  # GOTC NOTE: at the moment memory management below isn't really working right anyway,
   #          but doesn't cause harm. leave alone for now
   # Memory is monitored by looking at the amount of free memory left
   memory-threshold-in-mb = 1024
