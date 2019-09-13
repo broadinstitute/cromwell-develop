@@ -49,14 +49,8 @@ system {
   # Number of seconds between workflow launches
   new-workflow-poll-rate = 10
 
-  # Lowered from the default number of cache read workers (25)
-  number-of-cache-read-workers = 10
-
   # Since the WorkflowLogCopyRouter is initialized in code, this is the number of workers
   number-of-workflow-log-copy-workers = 10
-
-  # Default number of cache read workers
-  number-of-cache-read-workers = 25
 
   # Maximum scatter width per scatter node. Cromwell will fail the workflow if the scatter width goes beyond N
   # CJL: 5/24/19: Setting this low in response to https://broadworkbench.atlassian.net/browse/PROD-137.
