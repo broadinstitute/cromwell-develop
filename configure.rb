@@ -16,6 +16,7 @@ $git_branch = ENV.fetch("GIT_BRANCH", $env)
 
 $git_repo = ENV.fetch("GIT_REPO", "firecloud-develop")
 
+# The tag used to be identical to env, now enhanced to allow overriding
 $dockerhub_tag = ENV.fetch("DOCKERHUB_TAG", $env)
 
 $manifest = ENV.fetch("MANIFEST", "manifest.rb")
