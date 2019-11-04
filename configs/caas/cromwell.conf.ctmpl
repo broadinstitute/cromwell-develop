@@ -440,6 +440,10 @@ backend {
           }
           http {}
         }
+        memory-retry {
+          error-keys = ["OutOfMemoryError", "Killed"]
+          multiplier = 2
+        }
       }
     }
   }
