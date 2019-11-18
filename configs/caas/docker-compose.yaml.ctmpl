@@ -5,6 +5,10 @@ version: '2'
 services:
   cromiam:
     image: broadinstitute/cromiam:{{$tag}}
+    logging:
+      driver: syslog
+      options:
+        tag: "cromwell-cromiam"
     environment:
       JAVA_OPTS: -Dconfig.file=/etc/cromiam.conf -DLOG_ROOT=/var/log/cromiam -DLOG_MODE=server
     volumes:
@@ -19,6 +23,10 @@ services:
       - "5050"
   cromiam-proxy:
     image: broadinstitute/openidc-proxy:latest
+    logging:
+      driver: syslog
+      options:
+        tag: "cromwell-proxy"
     hostname: cromwell.caas-{{$environment}}.broadinstitute.org
     links:
       - cromiam:app
@@ -36,8 +44,12 @@ services:
     restart: always
   cromwell:
     image: broadinstitute/cromwell:{{$tag}}
+    logging:
+      driver: syslog
+      options:
+        tag: "cromwell-app"
     environment:
-      JAVA_OPTS: -Dscala.concurrent.context.minThreads=50 -Dscala.concurrent.context.numThreads=50 -Dscala.concurrent.context.maxThreads=50 -Xmx20g -Xms20g -Djavax.net.ssl.keyStore=/etc/ssl/cromwell.keystore -Djavax.net.ssl.keyStorePassword=changeit -Djavax.net.ssl.trustStore=/etc/ssl/cromwell.truststore -Djavax.net.ssl.trustStorePassword=changeit -Dconfig.file=/etc/cromwell.conf
+      JAVA_OPTS: -Dscala.concurrent.context.minThreads=50 -Dscala.concurrent.context.numThreads=50 -Dscala.concurrent.context.maxThreads=50 -Xmx20g -Xms20g -Dconfig.file=/etc/cromwell.conf
       CROMWELL_ARGS: server
     volumes:
       - /etc/localtime:/etc/localtime:ro
@@ -51,10 +63,26 @@ services:
       - "8001"
     links:
       - logger
+      - sqlproxy:sqlproxy
     volumes_from:
       - logger
+  sqlproxy:
+    image: broadinstitute/cloudsqlproxy:1.11_2018117
+    logging:
+      driver: syslog
+      options:
+        tag: "cromwell-sqlproxy"
+    env_file:
+      - {{$dir}}/sqlproxy.env
+    volumes:
+      - {{$dir}}/cromwell-account.json:/etc/sqlproxy-service-account.json
+    restart: always
   logger:
     image: broadinstitute/fluentd-gcp:latest
+    logging:
+      driver: syslog
+      options:
+        tag: "cromwell-logger"
     volumes:
       - {{$dir}}/stackdriver.conf:/etc/fluent/config.d/stackdriver.conf:ro
       - {{$dir}}/cromwell_log.conf:/etc/fluent/config.d/cromwell.conf:ro

@@ -2,6 +2,7 @@ render "cromwell.conf.ctmpl"
 render "cromiam.conf.ctmpl"
 render "docker-compose.yaml.ctmpl"
 render "cromwell-account.json.ctmpl"
+render "sqlproxy.env.ctmpl"
 
 # copy_secret_from_path "secret/dsde/caas/#{$env}/cromwell/cromwell-service-account.json", field = "private_key", output_file_name = "cromwell-account.pem"
 
