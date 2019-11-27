@@ -483,7 +483,7 @@ database {
   db {
     driver = "com.mysql.jdbc.Driver"
     # driver = "com.mysql.cj.jdbc.Driver" <-- Switching *after* the PROD instance upgrades to 38. Til then will generate log warnings.
-    url = "jdbc:mysql://cromwell-mysql.caas-{{$environment}}.broadinstitute.org:3306/cromwell?requireSSL=true&useSSL=true&rewriteBatchedStatements=true"
+    url = "jdbc:mysql://sqlproxy:3306/cromwell?rewriteBatchedStatements=true"
     user = "{{$cromwellSecrets.Data.db_user}}"
     password = "{{$cromwellSecrets.Data.db_password}}"
     connectionTimeout = 60000
