@@ -112,7 +112,6 @@
   ],
   "authentication": {
     "isRequired": true,
-    "outsideAuth": true,
     "scopes": [
       "openid",
       "email",
