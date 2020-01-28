@@ -116,6 +116,7 @@
       "openid",
       "email",
       "profile"
-    ]
+    ],
+    "outsideAuth": true
   }
 }

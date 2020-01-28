@@ -41,6 +41,8 @@ spec:
         {{ end }}
         - name: CROMWELL_URL
           value: {{ env "CROMWELL_URL" }}
+        - name: SAM_URL
+          value: sam.dsde-{{ env "ENV" }}.broadinstitute.org
         - name: CAPABILITIES_CONFIG
           value: /etc/job-manager/capabilities/capabilities-config.json
         - name: USE_CAAS
