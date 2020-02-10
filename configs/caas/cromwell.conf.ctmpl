@@ -17,6 +17,8 @@ akka {
 
     parallelism-factor = 100.0
     parallelism-max = 64
+
+    http.host-connection-pool.max-connections = 1024
   }
 
   actor.guardian-supervisor-strategy = "cromwell.core.CromwellUserGuardianStrategy"
