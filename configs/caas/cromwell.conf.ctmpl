@@ -222,8 +222,8 @@ call-caching {
 
   # Whether to invalidate a cache result forever if we cannot reuse them. Disable this if you expect some cache copies
   # to fail for external reasons which should not invalidate the cache (e.g. auth differences between users):
-  # (default: false)
-  invalidate-bad-cache-results = true
+  # (default: true)
+  # invalidate-bad-cache-results = false
 
   # Filter call cache hits based on authorization failures copying previous call cache hits.
   # May need to be adjusted in the future.
