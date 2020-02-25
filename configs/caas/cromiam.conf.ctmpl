@@ -10,6 +10,8 @@ cromiam {
 akka.http.client.parsing.max-content-length=104857600
 akka.http.server.parsing.max-content-length=104857600
 
+akka.http.host-connection-pool.max-open-requests = 1024
+
 #Increased from 20s default to allow large metadata responses
 akka.http.server.request-timeout = 55s
 akka.http.server.idle-timeout = 55s
