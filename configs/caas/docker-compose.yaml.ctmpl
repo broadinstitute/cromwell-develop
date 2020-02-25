@@ -10,7 +10,7 @@ services:
       options:
         tag: "cromwell-cromiam"
     environment:
-      JAVA_OPTS: -Dconfig.file=/etc/cromiam.conf -DLOG_ROOT=/var/log/cromiam -DLOG_MODE=server
+      JAVA_OPTS: -Dconfig.file=/etc/cromiam.conf -DLOG_ROOT=/var/log/cromiam -DLOG_MODE=server -Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.port=1098 -Dcom.sun.management.jmxremote.rmi.port=1098 -Dcom.sun.management.jmxremote.local.only=false -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false
     volumes:
       - {{$dir}}/cromiam.conf:/etc/cromiam.conf:ro
       - /etc/localtime:/etc/localtime:ro
@@ -21,6 +21,8 @@ services:
       - "8000"
       - "8080"
       - "5050"
+    ports:
+      - "1098:1098"
   cromiam-proxy:
     image: broadinstitute/openidc-proxy:latest
     logging:
@@ -49,7 +51,7 @@ services:
       options:
         tag: "cromwell-app"
     environment:
-      JAVA_OPTS: -Dscala.concurrent.context.minThreads=50 -Dscala.concurrent.context.numThreads=50 -Dscala.concurrent.context.maxThreads=50 -Xmx20g -Xms20g -Dconfig.file=/etc/cromwell.conf
+      JAVA_OPTS: -Dscala.concurrent.context.minThreads=50 -Dscala.concurrent.context.numThreads=50 -Dscala.concurrent.context.maxThreads=50 -Xmx20g -Xms20g -Dconfig.file=/etc/cromwell.conf -Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.port=1099 -Dcom.sun.management.jmxremote.rmi.port=1099 -Dcom.sun.management.jmxremote.local.only=false -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false
       CROMWELL_ARGS: server
     volumes:
       - /etc/localtime:/etc/localtime:ro
@@ -59,6 +61,8 @@ services:
     expose:
       - "8000"
       - "8001"
+    ports:
+      - "1099:1099"
     links:
       - logger
       - sqlproxy:sqlproxy
