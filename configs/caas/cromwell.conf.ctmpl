@@ -229,9 +229,25 @@ call-caching {
   # May need to be adjusted in the future.
   blacklist-cache {
     enabled = true
-    ttl = "1 days"
-    size = 5000
-    concurrency = 1000
+
+    groupings {
+      workflow-option = "google_project"
+      ttl = "1 days"
+      size = 500
+      concurrency = 1000
+    }
+
+    buckets {
+      ttl = "1 days"
+      size = 5000
+      concurrency = 10000
+    }
+
+    hits {
+      ttl = "1 days"
+      size = 20000
+      concurrency = 10000
+    }
   }
 }
 
