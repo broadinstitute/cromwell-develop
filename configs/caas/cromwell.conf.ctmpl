@@ -405,6 +405,11 @@ backend {
       config {
         slow-job-warning-time: 24 hours
 
+        # We already impose a 2400 jobs/project limit so there's no benefit to using 'noAddress'.
+        # With PAPI today, the potential downside is non-terminating jobs and large unexpected compute spend.
+        # Therefore, disabling the noAddress attribute for now in CaaS:
+        allow-noAddress-attribute: false
+
         // Google project
         project = "user_error: google_project must be set in workflow options http://cromwell.readthedocs.io/en/develop/wf_options/Google/"
 
@@ -482,8 +487,10 @@ services {
       # Set this value to "Inf" to turn off metadata summary refresh.  The default value is currently "2 seconds".
       # metadata-summary-refresh-interval = "Inf"
 
-
       metadata-summary-refresh-limit = 50000
+      
+      # Allow up to 5 million rows of METADATA_ENTRY to be compiled into metadata responses:
+      metadata-read-row-number-safety-threshold = 5000000
     }
   }
   Instrumentation {
