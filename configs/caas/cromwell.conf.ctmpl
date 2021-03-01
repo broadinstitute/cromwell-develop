@@ -339,7 +339,7 @@ languages {
 }
 
 backend {
-  default = "JES"
+  default = "PAPIv2"
   providers {
     Local {
       # setting config.root to /dev/null effectivly disables the local backend preventing end users from running code on the cromwell VM
