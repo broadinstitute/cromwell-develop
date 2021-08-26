@@ -142,9 +142,11 @@ system {
 
   io {
     # Throttle for GCS calls.
-    # this is our quota on broad-dsde-prod
-    number-of-requests = 10240611
-    per = 100 seconds
+    # this is our quota on broad-dsde-caas-prod
+    throttle {
+      number-of-requests = 10240611
+      per = 100 seconds
+    }
 
     # Number of times an I/O operation should be attempted before giving up and failing it.
     number-of-attempts = 10
@@ -167,12 +169,12 @@ system {
     }
   }
 
-  # Rate at which Cromwell updates it's instrumentation gauge metrics (e.g: Number of workflows running, queued, etc..)
+  # Rate at which Cromwell updates its instrumentation gauge metrics (e.g: Number of workflows running, queued, etc..)
   instrumentation-rate = 5 seconds
 
   job-rate-control {
-    jobs = 50
-    per = 1 second
+    jobs = 20
+    per = 10 seconds
   }
 
   # More info: https://docs.google.com/presentation/d/14VgNBDE8Don_oeOOPIWtJQC5OUrcpk3Vip5AQBBCSs4/edit
