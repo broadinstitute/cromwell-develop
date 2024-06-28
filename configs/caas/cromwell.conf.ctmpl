@@ -347,7 +347,7 @@ backend {
     }
 
     PAPIv2 {
-      actor-factory = "cromwell.backend.google.pipelines.v2alpha1.PipelinesApiLifecycleActorFactory"
+      actor-factory = "cromwell.backend.google.pipelines.v2beta.PipelinesApiLifecycleActorFactory"
       config {
         slow-job-warning-time: 24 hours
 
@@ -392,11 +392,13 @@ backend {
           compute-service-account = "default"
 
           # Endpoint for APIs, no reason to change this unless directed by Google.
-          endpoint-url = "https://genomics.googleapis.com/"
+          endpoint-url = "https://lifesciences.googleapis.com/"
 
           # Restrict access to VM metadata. Useful in cases when untrusted containers are running under a service
           # account not owned by the submitting user
           restrict-metadata-access = false
+
+          location = "us-central1"
         }
         batch-requests {
           timeouts {
@@ -434,7 +436,7 @@ services {
       # metadata-summary-refresh-interval = "Inf"
 
       metadata-summary-refresh-limit = 50000
-      
+
       # Allow up to 5 million rows of METADATA_ENTRY to be compiled into metadata responses:
       metadata-read-row-number-safety-threshold = 5000000
     }
