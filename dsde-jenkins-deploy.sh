@@ -54,7 +54,6 @@ fi
 set -eux
 
 ### Configure ###
-VAULT_TOKEN=$(sudo cat /etc/vault-token-dsde)
 scp -v $SSHOPTS configure.rb $SSH_USER@$SSH_HOST:/tmp/configure.rb
 BARE_GIT_BRANCH="${GIT_BRANCH#origin/}"
 $SSHCMD $SSH_USER@$SSH_HOST "bash -c '" \
