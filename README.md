@@ -1,6 +1,10 @@
 # cromwell-develop
 Repository for cromwell configs
 
+## Deprecation Notice
+
+As of November 2024 the `caas` instance (Cromwell-as-a-Service) is no longer supported.
+
 ## Rendering Configs
 
 To render the configs for a service, set the following environment variables:
